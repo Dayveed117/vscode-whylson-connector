@@ -10,14 +10,19 @@
 		"Other"
 	],
 	"activationEvents": [
-        "onCommand:whylson-connector.helloWorld"
+        "onCommand:whylson-connector.check-ligo",
+		"onLanguage:ligo",
+		"onLanguage:mligo",
+		"onLanguage:jsligo",
+		"onLanguage:religo"
 	],
 	"main": "./out/extension.js",
 	"contributes": {
 		"commands": [
 			{
-				"command": "whylson-connector.helloWorld",
-				"title": "Hello World"
+				"command": "whylson-connector.check-ligo",
+				"category": "Whylson-Connector",
+				"title": "Check Ligo"
 			}
 		]
 	},

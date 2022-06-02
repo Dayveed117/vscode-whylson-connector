@@ -1,26 +1,37 @@
-// The module 'vscode' contains the VS Code extensibility API
-// Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode';
 
-// this method is called when your extension is activated
-// your extension is activated the very first time the command is executed
-export function activate(context: vscode.ExtensionContext) {
-	
-	// Use the console to output diagnostic information (console.log) and errors (console.error)
-	// This line of code will only be executed once when your extension is activated
-	console.log('Congratulations, your extension "whylson-connector" is now active!');
+function isLigoDetected(e: vscode.TextEditor | undefined): Promise<boolean> {
 
-	// The command has been defined in the package.json file
-	// Now provide the implementation of the command with registerCommand
-	// The commandId parameter must match the command field in package.json
-	let disposable = vscode.commands.registerCommand('whylson-connector.helloWorld', () => {
-		// The code you place here will be executed every time your command is executed
-		// Display a message box to the user
-		vscode.window.showInformationMessage('Hello World from whylson-connector!');
-	});
-
-	context.subscriptions.push(disposable);
+	if (!e) {
+		console.log("No active editor!");
+		return Promise.reject(false);
+	}
+	const b = e.document.languageId.match(/^(m|js|re)?ligo$/g) ? true : false;
+	return b ? Promise.resolve(b) : Promise.reject(b);
 }
 
-// this method is called when your extension is deactivated
+// Method called when extension is activated
+export function activate(context: vscode.ExtensionContext) {
+
+	const checkLigo = async () => {
+		const a = await isLigoDetected(vscode.window.activeTextEditor);
+		if (a.valueOf()) {
+			vscode.window.showInformationMessage("Ligo File!");
+		} else {
+			vscode.window.showInformationMessage("Not a Ligo File...");
+		}
+	};
+
+	// Check if active document is a ligo file
+	checkLigo();
+
+	// Enable a command that checks if a file is ligo
+	context.subscriptions.push(vscode.commands.registerCommand('whylson-connector.open-session', checkLigo));
+
+	// Event that detects if there is a ligo file opened
+	// TODO : Figure out why this event is fired twice?
+	vscode.window.onDidChangeActiveTextEditor(checkLigo);
+}
+
+// Method called when extension is deactivated
 export function deactivate() {}
