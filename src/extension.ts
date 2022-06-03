@@ -1,26 +1,37 @@
 import * as vscode from 'vscode';
-import { isLigoDetected } from './utils';
+import { compileActiveLigo, isLigoDetected, isLigoExtensionActive } from './utils';
 
 // Method called when extension is activated
 export function activate(context: vscode.ExtensionContext) {
 
+  // * Change both name and add further functionality
+  // Wrapper for isLigoDetected, adding further logic
   const checkLigo = () => {
-    const a = isLigoDetected(vscode.window.activeTextEditor);
-    if (a) {
-      vscode.window.showInformationMessage("Ligo File!");
+    // TODO : isExtensionActive requires small timeout, enabling instance to load all extensions
+    const a = isLigoExtensionActive();
+    const b = isLigoDetected(vscode.window.activeTextEditor);
+    if (!a) {
+      vscode.window.showWarningMessage("Please install or activate \"ligo-vscode\" extension!");
+    } else if (!b) {
+      vscode.window.showWarningMessage("No ligo file active!");
     } else {
-      vscode.window.showWarningMessage("Not a Ligo File...");
-    } return a;
+      vscode.window.showInformationMessage("Extension ready to proceed!");
+    }
+    return a && b;
   };
 
+  // TODO : Specify contract entrypoint and then open compiled Michelson
+  // ! Compile command is ligo.compileContract
   const openContract = () => {
+    compileActiveLigo().then(res => {
+      console.log(res);
+    });
     vscode.window.showErrorMessage("Not yet implemented!");
   };
 
 
   // Check if active document is a ligo file
   if (checkLigo()) {
-    // TODO : Specify contract entrypoint and then open compiled Michelson
     openContract();
   }
 
@@ -33,8 +44,11 @@ export function activate(context: vscode.ExtensionContext) {
   }));
 
   // Event that detects if there is a ligo file opened
-  // TODO : Figure out why this event is fired twice?
-  context.subscriptions.push(vscode.window.onDidChangeActiveTextEditor(checkLigo));
+  context.subscriptions.push(vscode.window.onDidChangeActiveTextEditor( async () => {
+    setTimeout(() => {
+      checkLigo();
+    }, 250);
+  }));
 }
 
 // Method called when extension is deactivated

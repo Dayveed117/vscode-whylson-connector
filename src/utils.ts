@@ -10,6 +10,23 @@ export function isLigoDetected(e: vscode.TextEditor | undefined): boolean {
     console.log("No active editor!");
     return false;
   }
-  return e.document.languageId.match(/^(m|js|re)?ligo$/g) ? true : false;
+  return !!e.document.languageId.match(/^(m|js|re)?ligo$/g);
 }
+
+/**
+ * Verifies if ligo-vscode is installed and active
+ */
+export function isLigoExtensionActive(): boolean {
+  const a = vscode.extensions.getExtension("ligolang-publish.ligo-vscode");
+  return (!!a && a.isActive);
+}
+
+/**
+ * Compiles the active ligo document
+ */
+export async function compileActiveLigo() {
+  return await vscode.commands.getCommands();
+}
+
+
 
