@@ -10,7 +10,7 @@
 		"Other"
 	],
 	"activationEvents": [
-        "onCommand:whylson-connector.check-ligo",
+    "onCommand:whylson-connector.check-ligo",
 		"onLanguage:ligo",
 		"onLanguage:mligo",
 		"onLanguage:jsligo",
@@ -21,8 +21,13 @@
 		"commands": [
 			{
 				"command": "whylson-connector.check-ligo",
-				"category": "Whylson-Connector",
+				"category": "Whylson",
 				"title": "Check Ligo"
+			},
+			{
+				"command": "whylson-connector.start-session",
+				"category": "Whylson",
+				"title": "Start Whylson Session"
 			}
 		]
 	},
