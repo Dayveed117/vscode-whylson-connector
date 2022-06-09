@@ -5,7 +5,7 @@ import * as vscode from 'vscode';
  * @param e vscode.TextEditor : The active editor for vscode instance
  * @returns True if active editor is a ligo file, false otherwise
  */
-export function isLigoDetected(e: vscode.TextEditor | undefined): boolean {
+export function isLigoFileDetected(e: vscode.TextEditor | undefined): boolean {
   if (!e) {
     console.log("No active editor!");
     return false;
@@ -24,9 +24,6 @@ export function isLigoExtensionActive(): boolean {
 /**
  * Compiles the active ligo document
  */
-export async function compileActiveLigo() {
-  return await vscode.commands.getCommands();
+export function compileActiveLigo() {
+  return vscode.commands.executeCommand("ligo.compileContract", "main");
 }
-
-
-

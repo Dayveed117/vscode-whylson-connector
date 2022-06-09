@@ -1,15 +1,16 @@
 import * as vscode from 'vscode';
-import { compileActiveLigo, isLigoDetected, isLigoExtensionActive } from './utils';
+import { compileActiveLigo, isLigoFileDetected, isLigoExtensionActive } from './utils';
 
 // Method called when extension is activated
 export function activate(context: vscode.ExtensionContext) {
 
-  // * Change both name and add further functionality
-  // Wrapper for isLigoDetected, adding further logic
+  // --------------------------------------------------- //
+  //                     DECLARATIONS                    //
+  // -------------------------------------------------- //
+
   const checkLigo = () => {
-    // TODO : isExtensionActive requires small timeout, enabling instance to load all extensions
     const a = isLigoExtensionActive();
-    const b = isLigoDetected(vscode.window.activeTextEditor);
+    const b = isLigoFileDetected(vscode.window.activeTextEditor);
     if (!a) {
       vscode.window.showWarningMessage("Please install or activate \"ligo-vscode\" extension!");
     } else if (!b) {
@@ -20,34 +21,40 @@ export function activate(context: vscode.ExtensionContext) {
     return a && b;
   };
 
-  // TODO : Specify contract entrypoint and then open compiled Michelson
-  // ! Compile command is ligo.compileContract
   const openContract = () => {
-    compileActiveLigo().then(res => {
-      console.log(res);
-    });
-    vscode.window.showErrorMessage("Not yet implemented!");
+    compileActiveLigo();
+    // vscode.window.showErrorMessage("Not yet implemented!");
   };
 
+  // Initial Invocation
+  setTimeout(() => {
+    if (checkLigo()) {
+      openContract();
+    }
+  }, 100);
 
-  // Check if active document is a ligo file
-  if (checkLigo()) {
-    openContract();
-  }
+  // --------------------------------------------- //
+  //                     EVENTS                    //
+  // --------------------------------------------- //
 
   // Command that checks if a file is ligo
-  context.subscriptions.push(vscode.commands.registerCommand('whylson-connector.check-ligo', checkLigo));
+  context.subscriptions.push(vscode.commands.registerCommand('whylson-connector.check-ligo', () => {
+    if (checkLigo()) {
+      openContract();
+    }
+  }));
 
   // Command that starts the whylson session for the current contract
   context.subscriptions.push(vscode.commands.registerCommand('whylson-connector.start-session', () => {
     vscode.window.showErrorMessage("Not yet implemented!");
   }));
 
-  // Event that detects if there is a ligo file opened
-  context.subscriptions.push(vscode.window.onDidChangeActiveTextEditor( async () => {
-    setTimeout(() => {
-      checkLigo();
-    }, 250);
+  // Output channel for the extension
+  context.subscriptions.push(vscode.commands.registerCommand('whylson-connector.start-terminal', () => {
+    console.log('Creating terminal');
+    const t = vscode.window.createOutputChannel("Whylson Connector");
+    t.appendLine("Output channel created");
+    t.show();
   }));
 }
 
