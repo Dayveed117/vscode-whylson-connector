@@ -1,5 +1,6 @@
+import * as path from 'path';
 import * as vscode from 'vscode';
-import { compileActiveLigo, isLigoFileDetected, isLigoExtensionActive } from './utils';
+import { compileActiveLigo, isLigoFileDetected, isLigoExtensionActive, verifyLigoBinaries } from './utils';
 
 // Method called when extension is activated
 export function activate(context: vscode.ExtensionContext) {
@@ -8,22 +9,38 @@ export function activate(context: vscode.ExtensionContext) {
   //                     DECLARATIONS                    //
   // -------------------------------------------------- //
 
+  // ! Requires MEGA refactoring
   const checkLigo = () => {
     const a = isLigoExtensionActive();
     const b = isLigoFileDetected(vscode.window.activeTextEditor);
+    const c = verifyLigoBinaries();
+
     if (!a) {
       vscode.window.showWarningMessage("Please install or activate \"ligo-vscode\" extension!");
     } else if (!b) {
       vscode.window.showWarningMessage("No ligo file active!");
+    } else if (!c) {
+        vscode.window.showWarningMessage("LIGO not found in the system.");
     } else {
       vscode.window.showInformationMessage("Extension ready to proceed!");
     }
-    return a && b;
+    return a && b && c;
   };
 
+  // ! Requires MEGA refactoring
   const openContract = () => {
-    compileActiveLigo();
-    // vscode.window.showErrorMessage("Not yet implemented!");
+    const isCompiled = compileActiveLigo({
+      inPath: vscode.window.activeTextEditor?.document.fileName!,
+      entrypoint: "main",
+      outPath: vscode.window.activeTextEditor?.document.fileName!.concat(".tz")!,
+      flags: new Map<string, string>([
+        ["--michelson-comments", "location"]
+      ])
+    });
+
+    if (isCompiled) {
+      // * open contents of contract
+    }
   };
 
   // Initial Invocation
@@ -47,14 +64,6 @@ export function activate(context: vscode.ExtensionContext) {
   // Command that starts the whylson session for the current contract
   context.subscriptions.push(vscode.commands.registerCommand('whylson-connector.start-session', () => {
     vscode.window.showErrorMessage("Not yet implemented!");
-  }));
-
-  // Output channel for the extension
-  context.subscriptions.push(vscode.commands.registerCommand('whylson-connector.start-terminal', () => {
-    console.log('Creating terminal');
-    const t = vscode.window.createOutputChannel("Whylson Connector");
-    t.appendLine("Output channel created");
-    t.show();
   }));
 }
 

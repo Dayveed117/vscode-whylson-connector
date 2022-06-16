@@ -31,11 +31,6 @@
         "command": "whylson-connector.start-session",
         "category": "Whylson",
         "title": "Start Whylson Session"
-      },
-      {
-        "command": "whylson-connector.start-terminal",
-        "category": "Whylson",
-        "title": "Start Whylson Terminal"
       }
     ]
   },
