@@ -41,14 +41,14 @@ export function compileActiveLigo(cco: CompileContractOptions) {
 
   try {
     let flags: string = "";
-    cco.flags?.forEach( (v,k) => {
+    cco.flags?.forEach((v, k) => {
       flags += `${k} ${v} `;
     });
 
     let command = `ligo compile contract ${cco.inPath} -e ${cco.entrypoint} -o ${cco.outPath} ${flags}`.trimEnd();
-    console.log(command);
+    console.log("Contract compiled");
 
-    execSync(command, {encoding: "utf-8"});
+    execSync(command, { encoding: "utf-8" });
     return true;
   } catch (error) {
     return false;
@@ -62,7 +62,7 @@ export function compileActiveLigo(cco: CompileContractOptions) {
 export async function verifyLigoBinaries() {
 
   try {
-    execSync("which ligo", {encoding: "utf-8"});
+    execSync("which ligo", { encoding: "utf-8" });
     return true;
   } catch (error) {
     return false;

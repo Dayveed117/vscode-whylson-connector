@@ -20,7 +20,7 @@ export function activate(context: vscode.ExtensionContext) {
     } else if (!b) {
       vscode.window.showWarningMessage("No ligo file active!");
     } else if (!c) {
-        vscode.window.showWarningMessage("LIGO not found in the system.");
+      vscode.window.showWarningMessage("LIGO not found in the system.");
     } else {
       vscode.window.showInformationMessage("Extension ready to proceed!");
     }
@@ -39,7 +39,10 @@ export function activate(context: vscode.ExtensionContext) {
     });
 
     if (isCompiled) {
-      // * open contents of contract
+      vscode.window.showTextDocument(
+        vscode.Uri.parse(vscode.window.activeTextEditor?.document.fileName!.concat(".tz")!),
+        { viewColumn: vscode.ViewColumn.Beside, preserveFocus: true, preview: true }
+      );
     }
   };
 
@@ -53,6 +56,19 @@ export function activate(context: vscode.ExtensionContext) {
   // --------------------------------------------- //
   //                     EVENTS                    //
   // --------------------------------------------- //
+
+  let c = 0;
+
+  // * Set an event that fires open contract on changes to ligo documents
+  setTimeout(() => {
+    vscode.workspace.onDidChangeTextDocument(() => {
+      if (!isLigoFileDetected(vscode.window.activeTextEditor)) {
+        return;
+      }
+      c++;
+      console.log(c);
+    });
+  }, 750);
 
   // Command that checks if a file is ligo
   context.subscriptions.push(vscode.commands.registerCommand('whylson-connector.check-ligo', () => {
@@ -68,4 +84,4 @@ export function activate(context: vscode.ExtensionContext) {
 }
 
 // Method called when extension is deactivated
-export function deactivate() {}
+export function deactivate() { }
