@@ -1,6 +1,6 @@
 import * as path from 'path';
 import * as vscode from 'vscode';
-import { compileActiveLigo, isLigoFileDetected, isLigoExtensionActive, verifyLigoBinaries } from './utils';
+import { ligo } from './utils';
 
 // Method called when extension is activated
 export function activate(context: vscode.ExtensionContext) {
@@ -11,9 +11,9 @@ export function activate(context: vscode.ExtensionContext) {
 
   // ! Requires MEGA refactoring
   const checkLigo = () => {
-    const a = isLigoExtensionActive();
-    const b = isLigoFileDetected(vscode.window.activeTextEditor);
-    const c = verifyLigoBinaries();
+    const a = ligo.isLigoExtensionActive();
+    const b = ligo.isLigoFileDetected(vscode.window.activeTextEditor);
+    const c = ligo.verifyLigoBinaries();
 
     if (!a) {
       vscode.window.showWarningMessage("Please install or activate \"ligo-vscode\" extension!");
@@ -29,7 +29,7 @@ export function activate(context: vscode.ExtensionContext) {
 
   // ! Requires MEGA refactoring
   const openContract = () => {
-    const isCompiled = compileActiveLigo({
+    const isCompiled = ligo.compileActiveLigo({
       inPath: vscode.window.activeTextEditor?.document.fileName!,
       entrypoint: "main",
       outPath: vscode.window.activeTextEditor?.document.fileName!.concat(".tz")!,
@@ -57,18 +57,13 @@ export function activate(context: vscode.ExtensionContext) {
   //                     EVENTS                    //
   // --------------------------------------------- //
 
-  let c = 0;
-
-  // * Set an event that fires open contract on changes to ligo documents
-  setTimeout(() => {
-    vscode.workspace.onDidChangeTextDocument(() => {
-      if (!isLigoFileDetected(vscode.window.activeTextEditor)) {
-        return;
-      }
-      c++;
-      console.log(c);
-    });
-  }, 750);
+  // Refresh contract each time ligo source is saved
+  vscode.workspace.onDidSaveTextDocument(() => {
+    if (!ligo.isLigoFileDetected(vscode.window.activeTextEditor)) {
+      return;
+    }
+    openContract();
+  });
 
   // Command that checks if a file is ligo
   context.subscriptions.push(vscode.commands.registerCommand('whylson-connector.check-ligo', () => {
