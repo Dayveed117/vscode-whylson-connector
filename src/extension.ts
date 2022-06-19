@@ -1,4 +1,3 @@
-import * as path from 'path';
 import * as vscode from 'vscode';
 import { ligo } from './utils';
 
@@ -47,11 +46,11 @@ export function activate(context: vscode.ExtensionContext) {
   };
 
   // Initial Invocation
-  setTimeout(() => {
-    if (checkLigo()) {
-      openContract();
-    }
-  }, 100);
+  // setTimeout(() => {
+  //   if (checkLigo()) {
+  //     openContract();
+  //   }
+  // }, 100);
 
   // --------------------------------------------- //
   //                     EVENTS                    //
