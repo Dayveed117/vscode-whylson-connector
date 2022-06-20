@@ -72,4 +72,41 @@ export class WhylsonContext {
       info(`Created directory at ${this._contractsUri!.path}`);
     }
   }
+
+  /**
+   * Verifies if current focused file is ligo language.
+   * @param e vscode.TextEditor : The active editor for vscode instance.
+   * @returns True if active editor is a ligo file, false otherwise.
+   */
+  static isLigoFileDetected(e: vscode.TextEditor | undefined): boolean {
+    if (!e) {
+      return false;
+    }
+    return !!e.document.languageId.match(/^(m|js|re)?ligo$/g);
+  }
+
+  /**
+   * Verifies if ligo-vscode is installed and active.
+   * @returns `true` if the above condition is true, `false` otherwise.
+   */
+  static isLigoExtensionActive(): boolean {
+    const a = vscode.extensions.getExtension("ligolang-publish.ligo-vscode");
+    return (!!a && a.isActive);
+  }
+
+  private findContractBin() {
+    throw new Error("Method not Implemented");
+  }
+
+  compileContract(e: vscode.TextDocument) {
+    throw new Error("Method not Implemented");
+  }
+
+  private isWhylsonDetected(): boolean {
+    throw new Error("Method not implement.");
+  }
+
+  launchWhylson(contract: vscode.Uri, options: {}) {
+    throw new Error("Method not implement.");
+  }
 }
