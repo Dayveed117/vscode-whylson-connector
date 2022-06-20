@@ -1,3 +1,4 @@
+import { posix } from 'path';
 import { TextEncoder } from 'util';
 import * as vscode from 'vscode';
 import { info } from './logger';
@@ -7,14 +8,14 @@ import { info } from './logger';
  */
 export class WhylsonContext {
 
-  private _context: vscode.ExtensionContext;
-  private _rootFolder: vscode.WorkspaceFolder | undefined;
-  private _configPath: vscode.Uri | undefined;
-  private _contractsPath: vscode.Uri | undefined;
+  protected _context: vscode.ExtensionContext;
+  protected _rootFolder: vscode.WorkspaceFolder | undefined;
+  protected _configUri: vscode.Uri | undefined;
+  protected _contractsUri: vscode.Uri | undefined;
 
   /**
-   * Creates a WhylsonContext instance.
-   * Constructor solely establishes safe base values if
+   * Creates a WhylsonContext instance.  
+   * Constructor solely establishes safe base values if trusted workspace exists.
    * @param context `vscode.ExtensionContext`
    */
   constructor(context: vscode.ExtensionContext) {
@@ -22,6 +23,8 @@ export class WhylsonContext {
 
     if (this.isWorkspaceAvailable()) {
       this._rootFolder = vscode.workspace.workspaceFolders![0];
+      this._configUri = vscode.Uri.parse(posix.join(this._rootFolder.uri.path, ".whylson/contracts.json"));
+      this._contractsUri = vscode.Uri.parse(posix.join(this._rootFolder.uri.path, ".whylson/bin-contracts"));
     } else {
       vscode.window.showWarningMessage(
         "Whylson-Connector requires an available workspace to operate.");
@@ -29,18 +32,15 @@ export class WhylsonContext {
   }
 
   /**
-   * Fills out the extension with relevant information
+   * Activation process Whylson Context, for now only context.
    */
-  activate() {
-    if (!this.findWhylsonFolder()) {
-      info("Creating \".whylson\" folder and its contents in workspace root...");
-      this.createWhylsonFolder();
-    }
+  async activate() {
+    this.initWhylsonFolder();
   }
 
   /**
-   * Checks wheather current instance has a trusted workspace/folder opened
-   * @returns `true` if trusted workspace/folder is opened, `false` otherwise
+   * Checks wheather current instance has a trusted workspace/folder opened.
+   * @returns `true` if trusted workspace/folder is opened, `false` otherwise.
    */
   private isWorkspaceAvailable(): boolean {
     if (vscode.workspace.workspaceFolders) {
@@ -49,40 +49,27 @@ export class WhylsonContext {
   }
 
   /**
-   * Checks wheather or not .whylson folder has correct structure
-   * @returns `true` if it has the minimum structure, `false` otherwise
+   * Attempts to find `.whylson/` and its contents at root workfolder.  
+   * If non existant, fills folder with contents.
    */
-  private async findWhylsonFolder() {
+  private async initWhylsonFolder() {
     if (!this._rootFolder) { return; }
 
-    // * Find /.whylson/contracts
-    // * Find /.whylson/config.json
-    const target = new vscode.RelativePattern(this._rootFolder.uri, "**/.whylson/config.json");
-    const found = await vscode.workspace.findFiles(target, "**/node_modules/**", 1);
-    this._configPath = found[0];
-    return !!this._configPath;
+    try {
+      !!await vscode.workspace.fs.stat(this._configUri!);
+    } catch {
+      await vscode.workspace.fs.writeFile(
+        this._configUri!,
+        new TextEncoder().encode("{}"));
+      info(`Created contracts configuration file at ${this._configUri!.path}`);
+    }
+
+    try {
+      !!await vscode.workspace.fs.stat(this._contractsUri!);
+    } catch {
+      // Create /.whylson/bin-contracts
+      await vscode.workspace.fs.createDirectory(this._contractsUri!);
+      info(`Created directory at ${this._contractsUri!.path}`);
+    }
   }
-
-  /**
-   * Creates a new .whylson folder and its contents at the workspace root
-   */
-  private createWhylsonFolder() {
-    if (!this._rootFolder) { return; }
-
-    // * Create /.whylson/contracts
-    // * Create /.whylson/config.json
-    vscode.workspace.fs.createDirectory(vscode.Uri.parse("./.whylson/contracts"));
-    vscode.workspace.fs.writeFile(
-      vscode.Uri.parse("./whylson/config.json"),
-      new TextEncoder().encode("{}"));
-  }
-
-  /**
-   * Find the respective michelson contract of the current ligo source
-   * @param e `vscode.TextEditor`
-   */
-  findContract(e: vscode.TextEditor) {
-
-  }
-
 }
