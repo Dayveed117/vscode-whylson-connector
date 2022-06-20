@@ -23,7 +23,15 @@ export class MichelsonView implements vscode.TextDocumentContentProvider {
     throw new Error('Method not implemented.');
   }
 
-  openMichelsonView() {
+  openMichelsonView(contract: vscode.Uri) {
+    throw new Error("Method not Implemented");
+  }
+
+  closeMichelsonView() {
+    throw new Error("Method not Implemented");
+  }
+
+  private refreshView(contract: vscode.Uri) {
     throw new Error("Method not Implemented");
   }
 }

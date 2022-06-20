@@ -14,7 +14,7 @@ export class WhylsonContext {
   protected _contractsUri: vscode.Uri | undefined;
 
   /**
-   * Creates a WhylsonContext instance.  
+   * Creates a WhylsonContext instance.
    * Constructor solely establishes safe base values if trusted workspace exists.
    * @param context `vscode.ExtensionContext`
    */
@@ -36,6 +36,15 @@ export class WhylsonContext {
    */
   async activate() {
     this.initWhylsonFolder();
+    this.registerEvents();
+    this.registerCommands();
+  }
+
+  private deactivate() {
+    this._context.subscriptions.forEach(disposable => {
+      disposable.dispose();
+    });
+
   }
 
   /**
@@ -49,7 +58,7 @@ export class WhylsonContext {
   }
 
   /**
-   * Attempts to find `.whylson/` and its contents at root workfolder.  
+   * Attempts to find `.whylson/` and its contents at root workfolder.
    * If non existant, fills folder with contents.
    */
   private async initWhylsonFolder() {
@@ -73,6 +82,26 @@ export class WhylsonContext {
     }
   }
 
+  private findContractBin() {
+    throw new Error("Method not Implemented");
+  }
+
+  private compileContract(e: vscode.TextDocument) {
+    throw new Error("Method not Implemented");
+  }
+
+  private isWhylsonDetected(): boolean {
+    throw new Error("Method not implement.");
+  }
+
+  launchWhylson(contract: vscode.Uri) {
+    throw new Error("Method not implement.");
+  }
+
+  // --------------------------------------------- //
+  //                     STATIC                    //
+  // --------------------------------------------- //
+
   /**
    * Verifies if current focused file is ligo language.
    * @param e vscode.TextEditor : The active editor for vscode instance.
@@ -94,19 +123,78 @@ export class WhylsonContext {
     return (!!a && a.isActive);
   }
 
-  private findContractBin() {
-    throw new Error("Method not Implemented");
+  // --------------------------------------------- //
+  //                     EVENTS                    //
+  // --------------------------------------------- //
+
+  /**
+   * Registers events that concern whylson context
+   */
+  private registerEvents() {
+
+    // ? Close Dual View if active?
+    this._context.subscriptions.push(
+      vscode.window.onDidChangeActiveTextEditor((e) => {
+
+      })
+    );
+
+    // ? Saving on a ligo contract opens/refreshes michelson view
+    // ? Adds entry to contracts.json if not present
+    this._context.subscriptions.push(
+      vscode.workspace.onDidSaveTextDocument((e) => {
+
+      })
+    );
+
+    // ? If ligo or michelson are removed from group
+    this._context.subscriptions.push(
+      vscode.window.onDidChangeVisibleTextEditors((e) => {
+
+      })
+    );
+
+    // ? Changes made to ligo attempt to refresh michelson view
+    this._context.subscriptions.push(
+      vscode.workspace.onDidChangeTextDocument((e) => {
+
+      })
+    );
+
+    this._context.subscriptions.push(
+      vscode.extensions.onDidChange(() => {
+        if (!WhylsonContext.isLigoExtensionActive()) {
+          this.deactivate();
+        }
+      })
+    );
   }
 
-  compileContract(e: vscode.TextDocument) {
-    throw new Error("Method not Implemented");
-  }
+  // ----------------------------------------------- //
+  //                     COMMANDS                    //
+  // ----------------------------------------------- //
 
-  private isWhylsonDetected(): boolean {
-    throw new Error("Method not implement.");
-  }
+  private registerCommands() {
 
-  launchWhylson(contract: vscode.Uri, options: {}) {
-    throw new Error("Method not implement.");
+    // ! Placeholder check ligo
+    this._context.subscriptions.push(
+      vscode.commands.registerCommand("whylson-connector.check-ligo", () => {
+
+      })
+    );
+
+    // Open a michelson view from current ligo source
+    this._context.subscriptions.push(
+      vscode.commands.registerCommand("whylson-connector.open-michelson-view", () => {
+
+      })
+    );
+
+    // * Future Whylson start session
+    this._context.subscriptions.push(
+      vscode.commands.registerCommand("whylson-connector.start-session", () => {
+
+      })
+    );
   }
 }

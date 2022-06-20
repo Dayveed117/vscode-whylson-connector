@@ -11,12 +11,12 @@ export function activate(context: vscode.ExtensionContext) {
   // --------------------------------------------------  //
 
   // Test WhylsonContext object
-  let whylsonContext = new WhylsonContext(context);
+  const whylsonContext = new WhylsonContext(context);
 
   // ! Requires MEGA refactoring
   const checkLigo = () => {
-    const a = MichelsonView.isLigoExtensionActive();
-    const b = MichelsonView.isLigoFileDetected(vscode.window.activeTextEditor);
+    const a = WhylsonContext.isLigoExtensionActive();
+    const b = WhylsonContext.isLigoFileDetected(vscode.window.activeTextEditor);
     const c = ligo.verifyLigoBinaries();
 
     if (!a) {
@@ -62,12 +62,12 @@ export function activate(context: vscode.ExtensionContext) {
   // --------------------------------------------- //
 
   // Refresh contract each time ligo source is saved
-  vscode.workspace.onDidSaveTextDocument(() => {
-    if (!MichelsonView.isLigoFileDetected(vscode.window.activeTextEditor)) {
+  context.subscriptions.push(vscode.workspace.onDidSaveTextDocument(() => {
+    if (!WhylsonContext.isLigoFileDetected(vscode.window.activeTextEditor)) {
       return;
     }
     openContract();
-  });
+  }));
 
   // Command that checks if a file is ligo
   context.subscriptions.push(vscode.commands.registerCommand('whylson-connector.check-ligo', () => {
@@ -77,7 +77,7 @@ export function activate(context: vscode.ExtensionContext) {
   }));
 
   // Command that starts the whylson session for the current contract
-  context.subscriptions.push(vscode.commands.registerCommand('whylson-connector.start-session', () => {
+  context.subscriptions.push(vscode.commands.registerCommand('whylson-connector.start-session', async () => {
     whylsonContext.activate();
     vscode.window.showErrorMessage("Command not implemented.");
   }));
