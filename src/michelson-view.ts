@@ -1,9 +1,7 @@
 import * as vscode from 'vscode';
-import { WhylsonContext } from './whylson-context';
-
 
 // TODO : Implement logic and restrictions
-// * Michelson View activates when Ligo source is automatically detected as active document
+// * Michelson View may activate when Ligo source is detected as active document
 // * Only one instance of Michelson View at a time
 // * If active ligo source is not specified in .whylson/config.json add contract entry
 
@@ -31,7 +29,7 @@ export class MichelsonView implements vscode.TextDocumentContentProvider {
     throw new Error("Method not Implemented");
   }
 
-  private refreshView(contract: vscode.Uri) {
+  refreshView(contract: vscode.Uri) {
     throw new Error("Method not Implemented");
   }
 }

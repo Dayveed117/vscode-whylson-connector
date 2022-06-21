@@ -31,6 +31,16 @@
         "command": "whylson-connector.start-session",
         "category": "Whylson",
         "title": "Start Whylson Session"
+      },
+      {
+        "command": "whylson-connector.open-michelson-view",
+        "category": "Whylson",
+        "title": "Open Michelson View"
+      },
+      {
+        "command": "whylson-connector.remake-dot-whylson",
+        "category": "Whylson",
+        "title": "Remake .whylson Folder"
       }
     ]
   },
