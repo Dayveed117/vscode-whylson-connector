@@ -3,6 +3,8 @@ import { posix } from 'path';
 import { TextDecoder, TextEncoder } from 'util';
 import * as vscode from 'vscode';
 import { info } from './logger';
+import { MichelsonView } from './michelson-view';
+import { isExistsFile } from './utils';
 
 interface CompileContractOptions {
   entrypoint: string
@@ -14,6 +16,8 @@ interface ContractEntryScheme extends CompileContractOptions {
   source: string
   onPath: string
 };
+
+type Maybe<T> = T | undefined;
 
 async function entrypointInput() {
 
@@ -36,14 +40,15 @@ async function entrypointInput() {
 export class WhylsonContext {
 
   protected _context: vscode.ExtensionContext;
-  protected _rootFolder: vscode.WorkspaceFolder | undefined;
-  protected _configUri: vscode.Uri | undefined;
-  protected _contractsBinUri: vscode.Uri | undefined;
+  protected _rootFolder: Maybe<vscode.WorkspaceFolder>;
+  protected _configUri: Maybe<vscode.Uri>;
+  protected _contractsBinUri: Maybe<vscode.Uri>;
+  protected _michelsonView: Maybe<MichelsonView>;
 
   /**
-   * Creates a WhylsonContext instance.
+   * Creates a WhylsonContext instance.  
    * Constructor solely establishes safe base values if trusted workspace exists.
-   * @param context `vscode.ExtensionContext`
+   * @param context `vscode.ExtensionContext`.
    */
   constructor(context: vscode.ExtensionContext) {
     this._context = context;
@@ -52,6 +57,7 @@ export class WhylsonContext {
       this._rootFolder = vscode.workspace.workspaceFolders![0];
       this._configUri = vscode.Uri.parse(posix.join(this._rootFolder.uri.path, ".whylson/contracts.json"));
       this._contractsBinUri = vscode.Uri.parse(posix.join(this._rootFolder.uri.path, ".whylson/bin-contracts"));
+      this._michelsonView = new MichelsonView();
     } else {
       vscode.window.showWarningMessage(
         "Whylson-Connector requires an available workspace to operate.");
@@ -61,9 +67,9 @@ export class WhylsonContext {
   /**
    * Activation process Whylson Context, for now only context.
    */
-  async activate() {
+  activate() {
     this.initWhylsonFolder();
-    // this.registerEvents();
+    this.registerEvents();
     this.registerCommands();
   }
 
@@ -71,6 +77,9 @@ export class WhylsonContext {
     this._context.subscriptions.forEach(disposable => {
       disposable.dispose();
     });
+    if (this._michelsonView?.isOpen) {
+      this._michelsonView.closeMichelsonView();
+    };
   }
 
   /**
@@ -84,109 +93,150 @@ export class WhylsonContext {
   }
 
   /**
-   * Attempts to find `.whylson/` and its contents at root workfolder.
-   * If non existant, fills folder with contents.
-   */
+ * Attempts to find `".whylson/"` and its contents at root workfolder.  
+ * If non existant, fills folder with contents.
+ */
   private async initWhylsonFolder() {
     if (!this._rootFolder) { return; }
 
-    try {
-      !!await vscode.workspace.fs.stat(this._configUri!);
-    } catch {
-      await vscode.workspace.fs.writeFile(
-        this._configUri!,
-        new TextEncoder().encode("[]"));
+    // Verify if ".whylson/contracts.json" exists
+    if (!await isExistsFile(this._configUri!)) {
+      this.createContractsJSON();
       info(`Created contracts configuration file at ${this._configUri!.path}`);
     }
 
-    try {
-      !!await vscode.workspace.fs.stat(this._contractsBinUri!);
-    } catch {
-      // Create /.whylson/bin-contracts
-      await vscode.workspace.fs.createDirectory(this._contractsBinUri!);
+    // Verify if ".whylson/bin-contracts" exists
+    if (!await isExistsFile(this._contractsBinUri!)) {
+      this.createContractsDir(false);
       info(`Created directory at ${this._contractsBinUri!.path}`);
     }
   }
 
   /**
-   * Checks wheather current active ligo source has an entry in `contracts.json` or not.  
+   * Creates a new `".whylson/contracts.json"` file.
+   */
+  private async createContractsJSON() {
+    await vscode.workspace.fs.writeFile(
+      this._configUri!,
+      new TextEncoder().encode("[]"));
+  }
+
+  /**
+   * Creates a new `".whylson/bin-contracts"` folder.
+   * @param reset `boolean`. If `true` recursively deletes contents and recreates folder.
+   */
+  private async createContractsDir(reset: boolean) {
+    if (reset) {
+      vscode.workspace.fs.delete(this._contractsBinUri!, { recursive: true, useTrash: true });
+    }
+
+    await vscode.workspace.fs.createDirectory(this._contractsBinUri!);
+  }
+
+  /**
+   * Attempts to read `".whylson/contracts.json"`.
+   * @returns `ContractEntryScheme[]` if read successfully, `undefined` otherwise.
+   */
+  private async readContractsJSON(): Promise<Maybe<ContractEntryScheme[]>> {
+    try {
+      const encodedJSON = await vscode.workspace.fs.readFile(this._configUri!);
+      return JSON.parse(new TextDecoder("utf-8").decode(encodedJSON));
+    } catch {
+      info("Failed to read \".whylson/contracts.json\"", true);
+      return undefined;
+    }
+  }
+
+  /**
+   * Retrieves the contract entry for the active ligo document.
+   * @param e `vscode.TextEditor`.
+   * @returns `ContractEntryScheme` of active ligo document if found, undefined otherwise.
+   */
+  private async getContractEntry(e: vscode.TextEditor): Promise<Maybe<ContractEntryScheme>> {
+    const contents = await this.readContractsJSON();
+    if (contents) {
+      for (const ces of contents) {
+        if (ces.source === e.document.uri.path) {
+          return ces;
+        }
+      }
+    }
+    return undefined;
+  }
+
+  /**
+   * Creates entry for activo ligo document on `".whylson/contracts.json"`.
+   * @param src `string`. File path to ligo document.
+   * @param dst `string`. File path to michelson document.
+   * @return
+   */
+  private async createContractEntry(src: string, dst: string): Promise<Maybe<ContractEntryScheme>> {
+    const ep = await entrypointInput();
+    if (!ep) {
+      vscode.window.showErrorMessage("Failed to accept entrypoint, aborting operation.");
+      return undefined;
+    }
+    const contents = await this.readContractsJSON();
+    if (contents) {
+      const contractEntry: ContractEntryScheme = {
+        source: src,
+        onPath: dst,
+        entrypoint: ep,
+        flags: []
+      };
+      contents.push(contractEntry);
+      vscode.workspace.fs.writeFile(this._configUri!, new TextEncoder().encode(JSON.stringify(contents)));
+
+      return contractEntry;
+    }
+  }
+
+  /**
+   * Builds the michelson contract path from ligo document path.
+   * @param ligoDocPath `string` Path to ligo document source.
+   * @returns `string` File path to michelson contract.
+   */
+  private michelsonOfLigo(ligoDocPath: string) {
+    const basename = posix.basename(ligoDocPath).split(".")[0];
+    return posix.join(this._contractsBinUri!.path, basename.concat(".tz"));
+  }
+
+  // TODO : Redesign function
+  /**
+   * Checks wheather active ligo document has an entry in `".whylson/contracts.json"` or not.  
    * Adds entry if not found.
    * @param e `vscode.TextEditor`.
    * @returns `vscode.Uri` for the michelson contract of active ligo source file.
    */
-  private async findContractBin(e: vscode.TextEditor | undefined) {
+  private async findContractBin(e: vscode.TextEditor) {
 
-    if (!WhylsonContext.isLigoFileDetected(e)) { return; }
+    const inPath = e.document.uri.path;
+    const onPath = this.michelsonOfLigo(e.document.uri.path);
 
-    const basename = posix.basename(e!.document.uri.path).split(".")[0];
-    const onPath = posix.join(this._contractsBinUri!.path, basename.concat(".tz"));
-
-    try {
-      await vscode.workspace.fs.stat(vscode.Uri.parse(onPath));
-    } catch {
-
-      info(`Michelson for ${e!.document.uri.path} not found.\nCreating entry in contracts.json.`);
-
-      const ep = await entrypointInput();
-      if (!ep) {
-        vscode.window.showErrorMessage("Entrypoint not defined successfully.");
-        // ? : Shouldn't return null
-        return;
-      }
-
-      const entry = await this.getOrCreateContractEntry(e!, {
-        source: e!.document.uri.path,
-        onPath: onPath,
-        entrypoint: ep,
-        flags: ["--michelson-comments", "location"]
-      });
-
-      // ? This piece of code should belong to other function
+    if (await isExistsFile(e.document.uri)) {
+      return onPath;
+    } else {
+      info(`Creating entry for ${e.document.uri.path} in \".whylson/contracts.json\".`);
+      const entry = await this.createContractEntry(inPath, onPath);
       if (entry) {
-        await this.compileContract(entry);
+        this.compileContract(entry);
       }
+      // TODO : What do here?
     }
-    return vscode.Uri.parse(onPath);
   }
+
+  // --------------------------------------------------------------------------
+  // --------------------------------------------------------------------------
+  // --------------------------------------------------------------------------
 
   /**
-   * Get or create an entry for active ligo file in contracts.json.
-   * @param e `vscode.TextEditor`.
+   * Call compile contract function with `ContractEntryScheme` object.
+   * @param ces `ContractEntryScheme`.
+   * @returns Contract text as string is compilation successful.
    */
-  private async getOrCreateContractEntry(e: vscode.TextEditor, options?: ContractEntryScheme) {
-
-    try {
-
-      const encodedJSON = await vscode.workspace.fs.readFile(this._configUri!);
-      const contractsJSON: ContractEntryScheme[] = JSON.parse(new TextDecoder("utf-8").decode(encodedJSON));
-
-      if (options) {
-
-        contractsJSON.push(options);
-        await vscode.workspace.fs.writeFile(this._configUri!, new TextEncoder().encode(JSON.stringify(contractsJSON)));
-        return options;
-
-      } else {
-
-        for (const ces of contractsJSON) {
-          if (ces.source === e!.document.uri.path) {
-            return ces;
-          }
-        }
-      }
-    } catch {
-      vscode.window.showErrorMessage("Malformed contracts.json. Please fix before attempting to continue.");
-      return;
-    }
+  private compileContract(ces: ContractEntryScheme) {
+    return WhylsonContext._compileActiveLigo(ces.source, ces);
   }
-
-  private async compileContract(ces: ContractEntryScheme) {
-    const result = WhylsonContext._compileActiveLigo(ces.source, ces);
-  }
-
-  // --------------------------------------------------------------------------
-  // --------------------------------------------------------------------------
-  // --------------------------------------------------------------------------
 
   private isWhylsonDetected(): boolean {
     throw new Error("Method not implement.");
@@ -205,12 +255,12 @@ export class WhylsonContext {
    * @param e vscode.TextEditor : The active editor for vscode instance.
    * @returns True if active editor is a ligo file, false otherwise.
    */
-  static isLigoFileDetected(e: vscode.TextEditor | undefined): boolean {
+  static isLigoFileDetected(e: vscode.TextEditor | vscode.TextDocument | undefined): boolean {
     if (!e) {
-      vscode.window.showWarningMessage("No ligo source detected");
+      vscode.window.showWarningMessage("No ligo source detected.");
       return false;
     }
-    return !!e.document.languageId.match(/^(m|js|re)?ligo$/g);
+    return !!(e as vscode.TextDocument).languageId.match(/^(m|js|re)?ligo$/g);
   }
 
   /**
@@ -223,7 +273,7 @@ export class WhylsonContext {
   }
 
   /**
-   * Compiles the active ligo document using a set of options.  
+   * Compiles the active ligo document using a set of options.
    * @param cco `CompileContractOptions` : Set of options added for ligo compilation.
    * @returns `true` if compilation is successful, `false` otherwise.
    */
@@ -254,35 +304,68 @@ export class WhylsonContext {
    */
   private registerEvents() {
 
-    // ? Close Dual View if active?
+    // Triggers every time a tab is swapped
     this._context.subscriptions.push(
-      vscode.window.onDidChangeActiveTextEditor((e) => {
+      vscode.window.onDidChangeActiveTextEditor(async (e) => {
+        if (!WhylsonContext.isLigoFileDetected(e)) {
+          if (this._michelsonView?.isOpen) {
+            // ? Close Dual View if active?
+            this._michelsonView.closeMichelsonView();
+          }
+          return;
+        }
+        // * Attempt to find contract in bin-contracts
+        const contractUri = await this.findContractBin(e!);
 
+        // * Open it in michelson view
+        // TODO : Depending on extension config for automatic open view
       })
     );
 
-    // ? Saving on a ligo contract opens/refreshes michelson view
-    // ? Adds entry to contracts.json if not present
+    // Triggers everytime a document is saved
     this._context.subscriptions.push(
       vscode.workspace.onDidSaveTextDocument((e) => {
-
+        // ? Saving on a ligo contract opens/refreshes michelson view
+        // ? Adds entry to contracts.json if not present
       })
     );
 
-    // ? If ligo or michelson are removed from group
+    // Triggers everytime tab vector changes
     this._context.subscriptions.push(
       vscode.window.onDidChangeVisibleTextEditors((e) => {
-
+        // ? If ligo or michelson are removed from group
       })
     );
 
-    // ? Changes made to ligo attempt to refresh michelson view
+    // Mapping from file to latest onDidChangeTextDocument event
+    const changeTimers = new Map<string, NodeJS.Timeout>();
+
+    // Triggers every when any change to a document in the tabs is made
     this._context.subscriptions.push(
       vscode.workspace.onDidChangeTextDocument((e) => {
+        if (!WhylsonContext.isLigoFileDetected(e.document)) {
+          return;
+        }
+        if (this._michelsonView?.isOpen) {
+          const fname = e.document.fileName;
+          const timer = changeTimers.get(fname);
+          if (timer) {
+            clearTimeout(timer);
+          }
 
+          changeTimers.set(fname, setTimeout(() => {
+            changeTimers.delete(fname);
+            // this._michelsonView?.refreshView();
+          }));
+
+        } else {
+          // open michelson view
+          // this._michelsonView?.openMichelsonView();
+        }
       })
     );
 
+    // Deactivate context if ligo extension becomes inactive
     this._context.subscriptions.push(
       vscode.extensions.onDidChange(() => {
         if (!WhylsonContext.isLigoExtensionActive()) {
@@ -298,10 +381,10 @@ export class WhylsonContext {
    */
   private registerCommands() {
 
-    // ! Placeholder check ligo
+    // ! Placeholder ligo test command
     this._context.subscriptions.push(
       vscode.commands.registerCommand("whylson-connector.check-ligo", () => {
-        this.findContractBin(vscode.window.activeTextEditor);
+        vscode.window.showErrorMessage("Not implemented yet.");
       })
     );
 
@@ -315,9 +398,8 @@ export class WhylsonContext {
     // Wipe out .whylson data remakes it
     this._context.subscriptions.push(
       vscode.commands.registerCommand("whylson-connector.remake-dot-whylson", () => {
-        // TODO : This shouldn't work yet
-        this.deactivate();
-        this.activate();
+        this.createContractsJSON();
+        this.createContractsDir(true);
       })
     );
 

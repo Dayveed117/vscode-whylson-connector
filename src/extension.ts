@@ -1,6 +1,4 @@
 import * as vscode from 'vscode';
-import { MichelsonView } from './michelson-view';
-import { ligo } from './utils';
 import { WhylsonContext } from './whylson-context';
 
 // Method called when extension is activated
@@ -17,7 +15,7 @@ export function activate(context: vscode.ExtensionContext) {
     whylsonContext.activate();
   }, 100);
 
-  // ! Requires MEGA refactoring
+  // TODO : Requires MEGA refactoring
   // const checkLigo = () => {
   //   const a = WhylsonContext.isLigoExtensionActive();
   //   const b = WhylsonContext.isLigoFileDetected(vscode.window.activeTextEditor);

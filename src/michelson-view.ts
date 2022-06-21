@@ -10,26 +10,25 @@ import * as vscode from 'vscode';
  */
 export class MichelsonView implements vscode.TextDocumentContentProvider {
 
-  static active: boolean = false;
+  constructor(public isOpen = false) { }
 
-  constructor() {
-
-  }
-
-  onDidChange?: vscode.Event<vscode.Uri> | undefined;
+  onDidChangeEmitter = new vscode.EventEmitter<vscode.Uri>();
+  onDidChange = this.onDidChangeEmitter.event;
   provideTextDocumentContent(uri: vscode.Uri, token: vscode.CancellationToken): vscode.ProviderResult<string> {
     throw new Error('Method not implemented.');
   }
 
-  openMichelsonView(contract: vscode.Uri) {
-    throw new Error("Method not Implemented");
+  openMichelsonView(contractText: string) {
+    this.isOpen = true;
   }
 
   closeMichelsonView() {
     throw new Error("Method not Implemented");
   }
 
-  refreshView(contract: vscode.Uri) {
-    throw new Error("Method not Implemented");
+  refreshView(contractText: string) {
+    if (this.isOpen) {
+
+    }
   }
 }
