@@ -4,10 +4,6 @@ import { TextDecoder, TextEncoder } from 'util';
 import * as vscode from 'vscode';
 import { info } from './logger';
 
-/**
- * Encapsulation of relevant data for a well functioning Ligo-Michelson pair view
- */
-
 interface CompileContractOptions {
   entrypoint: string
   onPath?: string
@@ -27,13 +23,16 @@ async function entrypointInput() {
     prompt: "Pick entrypoint for ligo contract",
     value: "main",
     validateInput: text => {
+      // undefined, null or empty string accepts the prompt
       return new RegExp(/^[a-zA-Z_]+[a-zA-Z0-9'_]*$/g).test(text) ? undefined : "main";
     }
   });
   return result;
 }
 
-
+/**
+ * Encapsulation of relevant data for a well functioning Ligo-Michelson pair view
+ */
 export class WhylsonContext {
 
   protected _context: vscode.ExtensionContext;
