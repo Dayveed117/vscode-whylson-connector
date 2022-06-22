@@ -11,6 +11,7 @@ import * as vscode from 'vscode';
 export class MichelsonView implements vscode.TextDocumentContentProvider {
 
   private _context: vscode.ExtensionContext;
+  // TODO : Is this the best way to receive the contents?
   private _contractText: string = "";
   public isOpen = false;
 
@@ -20,7 +21,7 @@ export class MichelsonView implements vscode.TextDocumentContentProvider {
 
   onDidChangeEmitter = new vscode.EventEmitter<vscode.Uri>();
   onDidChange = this.onDidChangeEmitter.event;
-  provideTextDocumentContent(uri: vscode.Uri): string {
+  provideTextDocumentContent(_: vscode.Uri): string {
     return this._contractText;
   }
 
@@ -30,7 +31,7 @@ export class MichelsonView implements vscode.TextDocumentContentProvider {
    * @param contractUri `vscode.Uri` New uri for contract to fit whylson scheme.
    * @param contractText 'string` the contents of the real contract.
    */
-  async openMichelsonView(contractUri: vscode.Uri, contractText: string) {
+  async openMichelsonView(contractUri: vscode.Uri, contractText: string): Promise<void> {
     this.isOpen = true;
     this._contractText = contractText;
     // openTextDocument triggers provideTextDocuement method

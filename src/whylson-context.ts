@@ -4,35 +4,8 @@ import { TextDecoder, TextEncoder } from 'util';
 import * as vscode from 'vscode';
 import { WhylsonLogger } from './logger';
 import { MichelsonView } from './michelson-view';
-import { isExistsFile, readFile, verifyLigoBinaries, writeFile } from './utils';
-
-interface CompileContractOptions {
-  entrypoint: string
-  onPath?: string
-  flags: string[]
-};
-
-interface ContractEntryScheme extends CompileContractOptions {
-  source: string
-  onPath: string
-};
-
-type Maybe<T> = T | undefined;
-
-async function entrypointInput() {
-
-  const result = await vscode.window.showInputBox({
-    title: "First Time Ligo Compile",
-    placeHolder: "Most generically, \"main\"",
-    prompt: "Pick entrypoint for ligo contract",
-    value: "main",
-    validateInput: text => {
-      // undefined, null or empty string accepts the prompt
-      return new RegExp(/^[a-zA-Z_]+[a-zA-Z0-9'_]*$/g).test(text) ? undefined : "main";
-    }
-  });
-  return result;
-}
+import { CompileContractOptions, ContractEntryScheme, Maybe } from './types';
+import { entrypointInput, isExistsFile, readFile, verifyLigoBinaries, writeFile } from './utils';
 
 /**
  * Encapsulation of relevant data for a well functioning Ligo-Michelson pair view
