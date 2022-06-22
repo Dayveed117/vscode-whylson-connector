@@ -1,10 +1,9 @@
-import { execSync } from 'child_process';
 import { posix } from 'path';
 import { TextDecoder, TextEncoder } from 'util';
 import * as vscode from 'vscode';
 import { WhylsonLogger } from './logger';
 import { MichelsonView } from './michelson-view';
-import { CompileContractOptions, CompileContractOutput, ContractEntryScheme, Maybe } from './types';
+import { ContractEntryScheme, Maybe } from './types';
 import { utils } from './utils';
 
 /**
