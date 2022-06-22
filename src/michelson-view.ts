@@ -1,3 +1,4 @@
+import { posix } from 'path';
 import * as vscode from 'vscode';
 
 // TODO : Implement logic and restrictions
@@ -35,10 +36,16 @@ export class MichelsonView implements vscode.TextDocumentContentProvider {
     this.isOpen = true;
     this._contractText = contractText;
     // openTextDocument triggers provideTextDocuement method
-    const contractDoc = await vscode.workspace.openTextDocument(contractUri);
+    const contractDoc = await vscode.workspace.openTextDocument(
+      contractUri.with({ scheme: "whylson", path: "View : ".concat(posix.basename(contractUri.path)) })
+    );
     await vscode.window.showTextDocument(contractDoc, { preview: true, viewColumn: vscode.ViewColumn.Beside });
   }
 
+  /**
+   * Closes the current michelson view
+   * TODO : Is there an API for it? Do I have to know context?
+   */
   closeMichelsonView() {
     vscode.window.showErrorMessage("Method not Implemented");
   }
