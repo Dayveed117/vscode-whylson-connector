@@ -13,7 +13,7 @@ export function activate(context: vscode.ExtensionContext) {
 
   setTimeout(() => {
     whylsonContext.activate();
-  }, 100);
+  }, 200);
 
   // TODO : Requires MEGA refactoring
   // const checkLigo = () => {
@@ -55,31 +55,6 @@ export function activate(context: vscode.ExtensionContext) {
   //     openContract();
   //   }
   // }, 100);
-
-  // --------------------------------------------- //
-  //                     EVENTS                    //
-  // --------------------------------------------- //
-
-  // Refresh contract each time ligo source is saved
-  // context.subscriptions.push(vscode.workspace.onDidSaveTextDocument(() => {
-  //   if (!WhylsonContext.isLigoFileDetected(vscode.window.activeTextEditor)) {
-  //     return;
-  //   }
-  //   openContract();
-  // }));
-
-  // Command that checks if a file is ligo
-  // context.subscriptions.push(vscode.commands.registerCommand('whylson-connector.check-ligo', () => {
-  //   if (checkLigo()) {
-  //     openContract();
-  //   }
-  // }));
-
-  // Command that starts the whylson session for the current contract
-  // context.subscriptions.push(vscode.commands.registerCommand('whylson-connector.start-session', async () => {
-  //   whylsonContext.activate();
-  //   vscode.window.showErrorMessage("Command not implemented.");
-  // }));
 }
 
 // Method called when extension is deactivated

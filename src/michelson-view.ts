@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 
 // TODO : Implement logic and restrictions
-// * Michelson View may activate when Ligo source is detected as active document
+// * Michelson View may activate after clicking a button on UI or command
 // * Only one instance of Michelson View at a time
 // * If active ligo source is not specified in .whylson/config.json add contract entry
 
@@ -10,25 +10,41 @@ import * as vscode from 'vscode';
  */
 export class MichelsonView implements vscode.TextDocumentContentProvider {
 
-  constructor(public isOpen = false) { }
+  private _context: vscode.ExtensionContext;
+  private _contractText: string = "";
+  public isOpen = false;
+
+  constructor(context: vscode.ExtensionContext) {
+    this._context = context;
+  }
 
   onDidChangeEmitter = new vscode.EventEmitter<vscode.Uri>();
   onDidChange = this.onDidChangeEmitter.event;
-  provideTextDocumentContent(uri: vscode.Uri, token: vscode.CancellationToken): vscode.ProviderResult<string> {
-    throw new Error('Method not implemented.');
+  provideTextDocumentContent(uri: vscode.Uri): string {
+    return this._contractText;
   }
 
-  openMichelsonView(contractText: string) {
+  /**
+   * Open michelson view beside ligo document.  
+   * Uri is modified to fit "whylson" scheme.
+   * @param contractUri `vscode.Uri` New uri for contract to fit whylson scheme.
+   * @param contractText 'string` the contents of the real contract.
+   */
+  async openMichelsonView(contractUri: vscode.Uri, contractText: string) {
     this.isOpen = true;
+    this._contractText = contractText;
+    // openTextDocument triggers provideTextDocuement method
+    const contractDoc = await vscode.workspace.openTextDocument(contractUri);
+    await vscode.window.showTextDocument(contractDoc, { preview: true, viewColumn: vscode.ViewColumn.Beside });
   }
 
   closeMichelsonView() {
-    throw new Error("Method not Implemented");
+    vscode.window.showErrorMessage("Method not Implemented");
   }
 
-  refreshView(contractText: string) {
+  refreshView(contractUri: vscode.Uri) {
     if (this.isOpen) {
-
+      // TODO : refresh instead of always open
     }
   }
 }
