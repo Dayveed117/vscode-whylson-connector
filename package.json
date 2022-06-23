@@ -54,7 +54,25 @@
           "when": "resourceLangId =~ /^(m|js|re)?ligo$/"
         }
       ]
-    }
+    },
+    "snippets": [
+      {
+        "language": "ligo",
+        "path": "./snippets.json"
+      },
+      {
+        "language": "mligo",
+        "path": "./snippets.json"
+      },
+      {
+        "language": "jsligo",
+        "path": "./snippets.json"
+      },
+      {
+        "language": "religo",
+        "path": "./snippets.json"
+      }
+    ]
   },
   "scripts": {
     "vscode:prepublish": "npm run compile",
