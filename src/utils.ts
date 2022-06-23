@@ -20,12 +20,12 @@ export namespace utils {
 
   /**
    * Verifies if current focused file is ligo language.
-   * @param e vscode.TextEditor : The active editor for vscode instance.
-   * @returns True if active editor is a ligo file, false otherwise.
+   * @param e `vscode.TextDocument` The active editor for vscode instance.
+   * @returns `true` if active editor is a ligo file, `false` otherwise.
    */
-  export function isLigoFileDetected(e: vscode.TextEditor | undefined) {
+  export function isLigoFileDetected(e: vscode.TextDocument): boolean {
     if (!e) { return false; }
-    return !!e.document.languageId.match(/^(m|js|re)?ligo$/g);
+    return !!e.languageId.match(/^(m|js|re)?ligo$/g);
   }
 
   /**
@@ -41,19 +41,24 @@ export namespace utils {
    * Compiles the active ligo document using a set of options.
    * @param source `string` File path to active ligo document.
    * @param cco `CompileContractOptions`.
-   * @returns `CompileContractOutput` object
+   * @returns `CompileContractOutput` object.
    */
   // ! This function might be overhauled by an API call to ligo extension
   export function compileLigo(source: string, cco: CompileContractOptions): CompileContractOutput {
 
     let command = `ligo compile contract ${source} -e ${cco.entrypoint} ${cco.flags.join(" ")}`.trimEnd();
-    if (cco.onPath) {
-      command = command.concat(` -o ${cco.onPath}`);
-    }
 
+    // TODO : Is compiling twice the best way to get contract into both string and file?
     try {
-      let text = execSync(command, { encoding: "utf-8" });
-      return { command: command, stdout: text, status: true };
+      // Compile without outputting to file
+      let stdout = execSync(command, { encoding: "utf-8" });
+
+      if (cco.onPath) {
+        command = command.concat(` -o ${cco.onPath}`);
+        // Compile into file
+        execSync(command, { encoding: "utf-8" });
+      }
+      return { command: command, stdout: stdout, status: true };
     } catch (error) {
       return { command: command, stdout: undefined, status: false };
     }
@@ -75,8 +80,8 @@ export namespace utils {
   /**
    * Attempts to read a file and returns its contents as string.
    * @param uri `vscode.Uri`.
-   * @returns The contents of the read file as a string, 
-   * empty string if failed to be read.
+   * @returns The contents of the resource as `string`, 
+   * or empty `string` if unsuccessful.
    */
   export async function readFile(uri: vscode.Uri): Promise<string> {
     try {
@@ -107,12 +112,13 @@ export namespace utils {
 
     return await vscode.window.showInputBox({
       title: "First Time Ligo Compile",
-      placeHolder: "Most generically, \"main\"",
+      placeHolder: "main",
       prompt: "Pick entrypoint for ligo contract",
       value: "main",
       validateInput: text => {
         // undefined, null or empty string accepts the prompt
-        return new RegExp(/^[a-zA-Z_]+[a-zA-Z0-9'_]*$/g).test(text) ? undefined : "main";
+        return new RegExp(/^[a-zA-Z_]+[a-zA-Z0-9'_]*$/g).test(text) ? undefined :
+          "Values must conform to ligo's function nomenclature";
       }
     });
   }

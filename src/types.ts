@@ -46,6 +46,10 @@ export interface CompileContractOutput {
  */
 export interface ContractEntryScheme extends CompileContractOptions {
   /**
+   * Basename in `source` field, for convenience.
+   */
+  title: string
+  /**
    * File path to ligo document.
    */
   source: string

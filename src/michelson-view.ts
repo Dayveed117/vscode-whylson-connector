@@ -11,17 +11,18 @@ import * as vscode from 'vscode';
  */
 export class MichelsonView implements vscode.TextDocumentContentProvider {
 
-  private _context: vscode.ExtensionContext;
+  onDidChangeEmitter = new vscode.EventEmitter<vscode.Uri>();
+  onDidChange = this.onDidChangeEmitter.event;
+  public isOpen: boolean = false;
+
   // TODO : Is this the best way to receive the contents?
   private _contractText: string = "";
-  public isOpen = false;
+  private _context: vscode.ExtensionContext;
 
   constructor(context: vscode.ExtensionContext) {
     this._context = context;
   }
 
-  onDidChangeEmitter = new vscode.EventEmitter<vscode.Uri>();
-  onDidChange = this.onDidChangeEmitter.event;
   provideTextDocumentContent(_: vscode.Uri): string {
     return this._contractText;
   }
@@ -32,27 +33,24 @@ export class MichelsonView implements vscode.TextDocumentContentProvider {
    * @param contractUri `vscode.Uri` New uri for contract to fit whylson scheme.
    * @param contractText 'string` the contents of the real contract.
    */
-  async openMichelsonView(contractUri: vscode.Uri, contractText: string): Promise<void> {
+  async display(contractUri: vscode.Uri, contractText: string): Promise<void> {
     this.isOpen = true;
     this._contractText = contractText;
     // openTextDocument triggers provideTextDocuement method
     const contractDoc = await vscode.workspace.openTextDocument(
-      contractUri.with({ scheme: "whylson", path: "View : ".concat(posix.basename(contractUri.path)) })
+      contractUri.with({
+        scheme: "michelson",
+        path: "View : ".concat(posix.basename(contractUri.path))
+      })
     );
-    await vscode.window.showTextDocument(contractDoc, { preview: true, viewColumn: vscode.ViewColumn.Beside });
+    await vscode.window.showTextDocument(contractDoc, {
+      preview: false,
+      viewColumn: vscode.ViewColumn.Beside,
+      preserveFocus: true
+    });
   }
 
-  /**
-   * Closes the current michelson view
-   * TODO : Is there an API for it? Do I have to know context?
-   */
-  closeMichelsonView() {
-    vscode.window.showErrorMessage("Method not Implemented");
-  }
-
-  refreshView(contractUri: vscode.Uri) {
-    if (this.isOpen) {
-      // TODO : refresh instead of always open
-    }
+  close() {
+    this.isOpen = false;
   }
 }

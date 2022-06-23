@@ -10,7 +10,6 @@
     "Other"
   ],
   "activationEvents": [
-    "onCommand:whylson-connector.check-ligo",
     "onLanguage:ligo",
     "onLanguage:mligo",
     "onLanguage:jsligo",
@@ -29,20 +28,33 @@
       },
       {
         "command": "whylson-connector.start-session",
+        "enablement": "resourceLangId =~ /^(m|js|re)?ligo$/",
         "category": "Whylson",
         "title": "Start Whylson Session"
       },
       {
         "command": "whylson-connector.open-michelson-view",
+        "enablement": "resourceLangId =~ /^(m|js|re)?ligo$/",
+        "title": "Open Michelson View",
         "category": "Whylson",
-        "title": "Open Michelson View"
+        "icon": "$(go-to-file)"
       },
       {
         "command": "whylson-connector.remake-dot-whylson",
+        "enablement": "resourceLangId =~ /^(m|js|re)?ligo$/",
         "category": "Whylson",
         "title": "Remake .whylson Folder"
       }
-    ]
+    ],
+    "menus": {
+      "editor/title": [
+        {
+          "command": "whylson-connector.open-michelson-view",
+          "group": "navigation",
+          "when": "resourceLangId =~ /^(m|js|re)?ligo$/"
+        }
+      ]
+    }
   },
   "scripts": {
     "vscode:prepublish": "npm run compile",
