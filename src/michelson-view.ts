@@ -19,12 +19,13 @@ export class MichelsonView implements vscode.TextDocumentContentProvider {
   // TODO : Is this the best way to receive the contents?
   private _contractText: string = "";
   private _context: vscode.ExtensionContext;
+  private _document: Maybe<vscode.TextDocument>;
 
   constructor(context: vscode.ExtensionContext) {
     this._context = context;
   }
 
-  provideTextDocumentContent(_: vscode.Uri): string {
+  provideTextDocumentContent(uri: vscode.Uri): string {
     return this._contractText;
   }
 
@@ -35,22 +36,38 @@ export class MichelsonView implements vscode.TextDocumentContentProvider {
    * @param contents 'string` the contents of the real contract.
    */
   async display(title: Maybe<string>, contents: string): Promise<void> {
-    this.isOpen = true;
-    this._contractText = contents;
-
     if (!title) {
       title = "contract.tz";
     }
 
+    if (this.isOpen) {
+      this._contractText = contents;
+      this.refresh(title, contents);
+    }
+
+    this.isOpen = true;
+
     // openTextDocument triggers provideTextDocuement method
-    const contractDoc = await vscode.workspace.openTextDocument(
+    this._document = await vscode.workspace.openTextDocument(
       vscode.Uri.parse(`michelson:View : ${title}`)
     );
 
-    await vscode.window.showTextDocument(contractDoc, {
+    await vscode.window.showTextDocument(this._document, {
       preview: false,
       viewColumn: vscode.ViewColumn.Beside,
       preserveFocus: true
+    });
+  }
+
+  async refresh(title: Maybe<string>, contents: string) {
+    let e = await vscode.window.showTextDocument(this._document!, {
+      preview: false,
+      viewColumn: vscode.ViewColumn.Beside,
+      preserveFocus: true
+    });
+
+    e.edit((edit) => {
+      edit.insert(new vscode.Position(0, 0), contents);
     });
   }
 

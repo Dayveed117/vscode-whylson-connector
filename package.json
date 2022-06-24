@@ -40,7 +40,7 @@
           "additionalProperties": false,
           "default": {
             "createEntry": false,
-            "openView": false
+            "openView": true
           }
         },
         "whylson-connector.highlightAnnotations": {

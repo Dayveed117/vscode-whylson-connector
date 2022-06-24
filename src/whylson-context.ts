@@ -128,7 +128,7 @@ export class WhylsonContext {
   private async createContractsDir(reset: boolean) {
     if (reset) {
       try {
-        await vscode.workspace.fs.delete(this._contractsBinUri!, { recursive: true, useTrash: true });
+        await vscode.workspace.fs.delete(this._contractsBinUri!, { recursive: true });
       } catch {
         vscode.window.showErrorMessage("Unable to delete \".whylson\" folder");
         return;

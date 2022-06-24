@@ -13,28 +13,28 @@
     ],
     "description": "Inequality annotation for next \"let\" expression"
   },
-  "whylson-gt": {
+  "whylson-greater-than": {
     "prefix": "whylson-gt",
     "body": [
       "$LINE_COMMENT@ ${0:value} > ${1|int,nat,mutez|} ?"
     ],
     "description": "\"Greater than\" annotation for next \"let\" expression"
   },
-  "whylson-ge": {
+  "whylson-greater-equals": {
     "prefix": "whylson-ge",
     "body": [
       "$LINE_COMMENT@ ${0:value} >= ${1|int,nat,mutez|} ?"
     ],
     "description": "\"Greater equals\" annotation for next \"let\" expression"
   },
-  "whylson-lt": {
+  "whylson-lesser-than": {
     "prefix": "whylson-lt",
     "body": [
       "$LINE_COMMENT@ ${0:value} < ${1|int,nat,mutez|} ?"
     ],
     "description": "\"Lesser than\" annotation for next \"let\" expression"
   },
-  "whylson-le": {
+  "whylson-lesser-equals": {
     "prefix": "whylson-le",
     "body": [
       "$LINE_COMMENT@ ${0:value} <= ${1|int,nat,mutez|} ?"
