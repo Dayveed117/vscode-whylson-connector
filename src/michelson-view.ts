@@ -1,11 +1,6 @@
-import { posix } from 'path';
 import * as vscode from 'vscode';
+import { Logger } from './logger';
 import { Maybe } from './types';
-
-// TODO : Implement logic and restrictions
-// * Michelson View may activate after clicking a button on UI or command
-// * Only one instance of Michelson View at a time
-// * If active ligo source is not specified in .whylson/config.json add contract entry
 
 /**
  * Encapsulates data and logic regarding michelson view
@@ -17,23 +12,25 @@ export class MichelsonView implements vscode.TextDocumentContentProvider {
   public isOpen: boolean = false;
 
   // TODO : Is this the best way to receive the contents?
-  private _contractText: string = "";
+  private _content: string = "";
   private _context: vscode.ExtensionContext;
-  private _document: Maybe<vscode.TextDocument>;
+  private _log: Logger;
+  private _editor: Maybe<vscode.TextEditor>;
 
-  constructor(context: vscode.ExtensionContext) {
+  constructor(context: vscode.ExtensionContext, logger: Logger) {
     this._context = context;
+    this._log = logger;
   }
 
   provideTextDocumentContent(uri: vscode.Uri): string {
-    return this._contractText;
+    return this._content;
   }
 
   /**
    * Open michelson view beside ligo document.  
    * Uri is modified to fit "whylson" scheme.
    * @param title `string` View name.
-   * @param contents 'string` the contents of the real contract.
+   * @param contents 'string` the contents of the michelson file.
    */
   async display(title: Maybe<string>, contents: string): Promise<void> {
     if (!title) {
@@ -41,34 +38,30 @@ export class MichelsonView implements vscode.TextDocumentContentProvider {
     }
 
     if (this.isOpen) {
-      this._contractText = contents;
-      this.refresh(title, contents);
+      this.refresh(contents);
     }
 
-    this.isOpen = true;
-
     // openTextDocument triggers provideTextDocuement method
-    this._document = await vscode.workspace.openTextDocument(
-      vscode.Uri.parse(`michelson:View : ${title}`)
-    );
+    this._content = contents;
+    const doc = await vscode.workspace.openTextDocument(
+      vscode.Uri.parse(`michelson:View : ${title}`));
 
-    await vscode.window.showTextDocument(this._document, {
-      preview: false,
+    this._editor = await vscode.window.showTextDocument(doc!, {
       viewColumn: vscode.ViewColumn.Beside,
-      preserveFocus: true
+      preserveFocus: true,
     });
   }
 
-  async refresh(title: Maybe<string>, contents: string) {
-    let e = await vscode.window.showTextDocument(this._document!, {
-      preview: false,
-      viewColumn: vscode.ViewColumn.Beside,
-      preserveFocus: true
+  async refresh(contents: string) {
+    this._content = contents;
+    const edited = await this._editor!.edit((edit) => {
+      edit.insert(new vscode.Position(0, 0), this._content);
     });
-
-    e.edit((edit) => {
-      edit.insert(new vscode.Position(0, 0), contents);
-    });
+    if (edited) {
+      this._log.debug("View updated!");
+    } else {
+      this._log.debug("Couldn't update view.");
+    }
   }
 
   close() {

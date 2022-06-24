@@ -4,9 +4,6 @@ import * as vscode from 'vscode';
  * Simple logger class to help extension debugging
  * and providing information for users.
  */
-
-const separator = "-----";
-
 export class Logger {
 
   private _mode: vscode.ExtensionMode;
@@ -27,7 +24,7 @@ export class Logger {
    * @param show `boolean` Bring output channel to focus.
    */
   public info(msg: string, show: boolean = false) {
-    this._extensionOutput.appendLine(`${separator}\nINFO: ${msg}`);
+    this._extensionOutput.appendLine(`INFO: ${msg}`);
     if (show) {
       this._extensionOutput.show();
     }

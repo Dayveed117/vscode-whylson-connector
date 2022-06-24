@@ -27,9 +27,9 @@ export class WhylsonContext {
    */
   constructor(context: vscode.ExtensionContext) {
     this._context = context;
-    this._view = new MichelsonView(context);
     this._log = new Logger(context);
     this._config = new Config(context);
+    this._view = new MichelsonView(context, this._log);
 
     if (this.isWorkspaceAvailable()) {
       this._rootFolder = vscode.workspace.workspaceFolders![0];
@@ -334,8 +334,20 @@ export class WhylsonContext {
       vscode.workspace.onDidCloseTextDocument((e) => {
         // Close michelson views
         if (e.uri.scheme === "michelson") {
+          this._log.debug(`Michelson view closed!`);
           this._view.close();
         }
+        this._log.debug(`Document closed : ${e.uri.path}`);
+      })
+    );
+
+    // Triggers when documents are opened
+    this._context.subscriptions.push(
+      vscode.workspace.onDidOpenTextDocument((e) => {
+        if (e.uri.scheme === "michelson") {
+          this._log.debug(`Michelson view opened!`);
+        }
+        this._log.debug(`Document opened : ${e.uri.path}`);
       })
     );
 
