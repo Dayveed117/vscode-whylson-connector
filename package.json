@@ -20,6 +20,43 @@
   ],
   "main": "./out/extension.js",
   "contributes": {
+    "configuration": {
+      "title": "Whylson-Connector",
+      "properties": {
+        "whylson-connector.onSaveActions": {
+          "type": "object",
+          "order": 0,
+          "description": "Control actions performed on saving ligo documents.",
+          "properties": {
+            "createEntry": {
+              "type": "boolean",
+              "description": "Create entry in contracts.json."
+            },
+            "openView": {
+              "type": "boolean",
+              "description": "Open michelson view if closed (entry must exist)."
+            }
+          },
+          "additionalProperties": false,
+          "default": {
+            "createEntry": false,
+            "openView": false
+          }
+        },
+        "whylson-connector.highlightAnnotations": {
+          "type": "boolean",
+          "default": true,
+          "description": "Highlight whylson annotated lines in ligo documents.",
+          "scope": "window"
+        },
+        "whylson-connector.showOutputMessages": {
+          "type": "boolean",
+          "default": true,
+          "description": "Have extension occasionally send messages on Whylson-Connector output channel.",
+          "scope": "window"
+        }
+      }
+    },
     "commands": [
       {
         "command": "whylson-connector.check-ligo",

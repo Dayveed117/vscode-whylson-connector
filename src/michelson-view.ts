@@ -1,5 +1,6 @@
 import { posix } from 'path';
 import * as vscode from 'vscode';
+import { Maybe } from './types';
 
 // TODO : Implement logic and restrictions
 // * Michelson View may activate after clicking a button on UI or command
@@ -7,7 +8,7 @@ import * as vscode from 'vscode';
 // * If active ligo source is not specified in .whylson/config.json add contract entry
 
 /**
- * Encapsulates data and logic regarding Ligo-Michelson pair view
+ * Encapsulates data and logic regarding michelson view
  */
 export class MichelsonView implements vscode.TextDocumentContentProvider {
 
@@ -30,19 +31,22 @@ export class MichelsonView implements vscode.TextDocumentContentProvider {
   /**
    * Open michelson view beside ligo document.  
    * Uri is modified to fit "whylson" scheme.
-   * @param contractUri `vscode.Uri` New uri for contract to fit whylson scheme.
-   * @param contractText 'string` the contents of the real contract.
+   * @param title `string` View name.
+   * @param contents 'string` the contents of the real contract.
    */
-  async display(contractUri: vscode.Uri, contractText: string): Promise<void> {
+  async display(title: Maybe<string>, contents: string): Promise<void> {
     this.isOpen = true;
-    this._contractText = contractText;
+    this._contractText = contents;
+
+    if (!title) {
+      title = "contract.tz";
+    }
+
     // openTextDocument triggers provideTextDocuement method
     const contractDoc = await vscode.workspace.openTextDocument(
-      contractUri.with({
-        scheme: "michelson",
-        path: "View : ".concat(posix.basename(contractUri.path))
-      })
+      vscode.Uri.parse(`michelson:View : ${title}`)
     );
+
     await vscode.window.showTextDocument(contractDoc, {
       preview: false,
       viewColumn: vscode.ViewColumn.Beside,

@@ -7,13 +7,13 @@ import * as vscode from 'vscode';
 
 const separator = "-----";
 
-export class WhylsonLogger {
+export class Logger {
 
   private _mode: vscode.ExtensionMode;
   private _extensionOutput: vscode.OutputChannel;
 
   /**
-   * Create a WhylsonLogger instance.
+   * Create a Logger instance.
    * @param context `vscode.ExtensionContext`
    */
   constructor(context: vscode.ExtensionContext) {
@@ -49,7 +49,7 @@ export class WhylsonLogger {
   }
 
   /**
-   * Release resources associated with WhylsonLogger.
+   * Release resources associated with Logger.
    */
   public dispose() {
     this._extensionOutput.dispose();
