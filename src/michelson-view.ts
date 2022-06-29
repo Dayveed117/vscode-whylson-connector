@@ -42,6 +42,7 @@ export class MichelsonView implements vscode.TextDocumentContentProvider {
     }
 
     // openTextDocument triggers provideTextDocuement method
+    this.isOpen = true;
     this._content = contents;
     const doc = await vscode.workspace.openTextDocument(
       vscode.Uri.parse(`michelson:View : ${title}`));

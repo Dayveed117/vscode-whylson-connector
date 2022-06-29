@@ -4,7 +4,7 @@
 export type Maybe<T> = T | undefined;
 
 /**
- * Simple compile contract options.
+ * Options for compiling a ligo document.
  */
 export interface CompileContractOptions {
   /**
@@ -29,7 +29,7 @@ export interface CompileContractOutput {
   /**
    * Given command for compilation,
    */
-  command: string
+  command?: string
   /**
    * If output was not redirected to file, outputs contents to stdout.  
    * If output was redirected, contents are empty string.

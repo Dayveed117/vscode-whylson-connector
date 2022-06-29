@@ -19,6 +19,14 @@ export namespace utils {
   }
 
   /**
+   * Verifies if Whylson program is found within the sytem.
+   * @returns `true` if Whylson is found, `false` otherwise.
+   */
+  export function verifyWhylsonBinaries(): boolean {
+    throw new Error("Method not implemented.");
+  }
+
+  /**
    * Verifies if current focused file is ligo language.
    * @param e `vscode.TextDocument` The active editor for vscode instance.
    * @returns `true` if active editor is a ligo file, `false` otherwise.
@@ -43,7 +51,6 @@ export namespace utils {
    * @param cco `CompileContractOptions`.
    * @returns `CompileContractOutput` object.
    */
-  // ! This function might be overhauled by an API call to ligo extension
   export function compileLigo(source: string, cco: CompileContractOptions): CompileContractOutput {
 
     let command = `ligo compile contract ${source} -e ${cco.entrypoint} ${cco.flags.join(" ")}`.trimEnd();
@@ -62,6 +69,16 @@ export namespace utils {
     } catch (error) {
       return { command: command, stdout: undefined, status: false };
     }
+  }
+
+  /**
+   * Calls to ligo.silentCompileContract command with compile contract options.
+   * @param cco `CompileContractOptions`.
+   * @returns `CompileContractOutput` object.
+   */
+  export async function _compileLigo(cco: CompileContractOptions): Promise<CompileContractOutput> {
+    const result: Maybe<string> = await vscode.commands.executeCommand("ligo.silentCompileContract", cco);
+    return result === undefined ? { status: false, stdout: undefined } : { status: true, stdout: result };
   }
 
   /**
@@ -108,6 +125,11 @@ export namespace utils {
     }
   }
 
+  /**
+   * Creates a quickpick with `showInputBox`.  
+   * Manually input a valid entrypoint for a ligo document.
+   * @returns `string` Chosen entrypoint designation as string.
+   */
   export async function entrypointInput(): Promise<Maybe<string>> {
 
     return await vscode.window.showInputBox({
