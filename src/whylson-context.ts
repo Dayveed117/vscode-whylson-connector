@@ -361,7 +361,7 @@ export class WhylsonContext {
     );
 
     // Triggers every when any change to a document in the tabs' group is made
-    // * This function can only execute every 750 miliseconds
+    // * This function only executes every 750 miliseconds
     const throttledDisplay = debounce(this.displayContractFromSource, 750, { isImmediate: false });
     this._context.subscriptions.push(
       vscode.workspace.onDidChangeTextDocument(async (e) => {
@@ -375,7 +375,9 @@ export class WhylsonContext {
     // This event is more reliable for knowing when a document is closed
     this._context.subscriptions.push(
       vscode.window.onDidChangeVisibleTextEditors((e) => {
-        // console.log("Tabs changed!");
+        console.log(JSON.stringify(e));
+        // let michelsonView = e.filter((v) => { (v.document.uri.scheme === "michelson"); });
+        // console.log(michelsonView);
       })
     );
 
