@@ -54,17 +54,13 @@ export namespace utils {
   export function compileLigo(source: string, cco: CompileContractOptions): CompileContractOutput {
 
     let command = `ligo compile contract ${source} -e ${cco.entrypoint} ${cco.flags.join(" ")}`.trimEnd();
+    if (cco.onPath) {
+      command = command.concat(` -o ${cco.onPath}`);
+    }
 
-    // TODO : Is compiling twice the best way to get contract into both string and file?
     try {
       // Compile without outputting to file
-      let stdout = execSync(command, { encoding: "utf-8" });
-
-      if (cco.onPath) {
-        command = command.concat(` -o ${cco.onPath}`);
-        // Compile into file
-        execSync(command, { encoding: "utf-8" });
-      }
+      const stdout = execSync(command, { encoding: "utf-8" });
       return { command: command, stdout: stdout, status: true };
     } catch (error) {
       return { command: command, stdout: undefined, status: false };

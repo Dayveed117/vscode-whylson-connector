@@ -243,25 +243,28 @@ export class WhylsonContext {
   /**
  * Call compile contract function with `ContractEntryScheme` object.
  * @param ces `ContractEntryScheme`.
- * @returns Contract text as string is compilation successful.
+ * @param save `boolean` Controls compilation output (stdout, file).
+ * @returns `CompileContractOutput`.
  */
-  private compileContract(ces: ContractEntryScheme): CompileContractOutput {
-    // Break down ces into cco
-    let cco: CompileContractOptions = ces;
-    cco.onPath = undefined;
-    return utils.compileLigo(ces.source, cco);
+  private compileContract(ces: ContractEntryScheme, save: boolean): CompileContractOutput {
+    // We should not change original ces object
+    // use object destructuring and rest operator
+    return save ?
+      utils.compileLigo(ces.source, ces) :
+      utils.compileLigo(ces.source, { ...ces, onPath: undefined });
   }
 
   /**
-   * Wrapper for ligo.silentCompileContract command implementation.
+   * Call compile contract with ligo.silentCompileContract command implementation.
    * @param ces `ContractEntryScheme`.
    * @returns `CompileContractOutput`.
    */
-  private async _compileContract(ces: ContractEntryScheme): Promise<CompileContractOutput> {
-    // Break down ces into cco
-    let cco: CompileContractOptions = ces;
-    cco.onPath = undefined;
-    return await utils._compileLigo(cco);
+  private async _compileContract(ces: ContractEntryScheme, save: boolean): Promise<CompileContractOutput> {
+    // We should not change original ces object
+    // use object destructuring and rest operator
+    return save ?
+      await utils._compileLigo(ces) :
+      await utils._compileLigo({ ...ces, onPath: undefined });
   }
 
   /**
@@ -274,7 +277,7 @@ export class WhylsonContext {
   private async firstContractCompilation(doc: vscode.TextDocument): Promise<Maybe<vscode.Uri>> {
     const entry = await this.createContractEntry(doc.uri);
     if (entry) {
-      const { status } = this.compileContract(entry);
+      const { status } = this.compileContract(entry, true);
       if (status) {
         return vscode.Uri.parse(entry.onPath);
       }
@@ -305,7 +308,7 @@ export class WhylsonContext {
     let entry = await this.getContractEntry(doc.uri);
     if (entry) {
       // Attempts to compile contract, result is written into a file
-      const { status, stdout } = this.compileContract(entry);
+      const { status, stdout } = this.compileContract(entry, false);
       if (status) {
         // Display contract on successful compilation
         this.displayContract(doc.uri, stdout);
@@ -348,10 +351,10 @@ export class WhylsonContext {
         // If a valid entry is found or created, compile contract and display it
         // Only display if compilation successful and if extension configuration allows
         if (entry) {
-          const { status, stdout } = this.compileContract(entry);
+          const { status } = this.compileContract(entry, true);
           this._log.info(`${status ? "Successful" : "Failed"} compilation of ${e.uri.path}`);
           if (status && this._config.getOnSaveCreateActions()?.openView) {
-            this.displayContract(e.uri, stdout!);
+            this.displayContract(e.uri);
           }
         }
       })
@@ -368,16 +371,11 @@ export class WhylsonContext {
       })
     );
 
-    // Triggers when documents are closed
-    // TODO : Understand how to close virtual files
+    // Triggers when tab group is changed (opened file, closed file, moved to other group)
+    // This event is more reliable for knowing when a document is closed
     this._context.subscriptions.push(
-      vscode.workspace.onDidCloseTextDocument((e) => {
-        // Close michelson views
-        if (e.uri.scheme === "michelson") {
-          this._log.debug(`Michelson view closed!`);
-          this._view.close();
-        }
-        this._log.debug(`Document closed : ${e.uri.path}`);
+      vscode.window.onDidChangeVisibleTextEditors((e) => {
+        // console.log("Tabs changed!");
       })
     );
 
@@ -425,7 +423,7 @@ export class WhylsonContext {
         const doc = vscode.window.activeTextEditor!.document;
         let contractUri = await this.findContractBin(doc);
 
-        // Found a compiled michelson for active ligo document
+        // Did not find michelson counterpart for active ligo document
         if (!contractUri) {
           contractUri = await this.firstContractCompilation(doc);
         }
