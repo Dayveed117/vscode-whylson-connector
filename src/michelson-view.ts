@@ -1,11 +1,13 @@
 import * as vscode from 'vscode';
 import { Logger } from './logger';
-import { Maybe } from './types';
+import { ContractEntryScheme, Maybe } from './types';
 
 /**
  * Encapsulates data and logic regarding michelson view
  */
 export class MichelsonView implements vscode.TextDocumentContentProvider {
+
+  static readonly scheme = "michelson";
 
   onDidChangeEmitter = new vscode.EventEmitter<vscode.Uri>();
   onDidChange = this.onDidChangeEmitter.event;
@@ -45,7 +47,7 @@ export class MichelsonView implements vscode.TextDocumentContentProvider {
     this.isOpen = true;
     this._content = contents;
     const doc = await vscode.workspace.openTextDocument(
-      vscode.Uri.parse(`michelson:View : ${title}`));
+      vscode.Uri.parse(`${MichelsonView.scheme}:View : ${title}`));
 
     this._editor = await vscode.window.showTextDocument(doc!, {
       viewColumn: vscode.ViewColumn.Beside,
@@ -67,5 +69,49 @@ export class MichelsonView implements vscode.TextDocumentContentProvider {
 
   close() {
     this.isOpen = false;
+  }
+}
+
+export class TestView implements vscode.TextDocumentContentProvider {
+
+  static scheme = "example";
+  private _isOpen: boolean = false;
+  public get isOpen(): boolean { return this._isOpen; }
+  private counter: number = 0;
+  private michelsonDoc: Maybe<vscode.TextDocument>;
+
+  private _onDidChange = new vscode.EventEmitter<vscode.Uri>();
+  get onDidChange() { return this._onDidChange.event; }
+
+  constructor() { }
+
+  provideTextDocumentContent(uri: vscode.Uri, token: vscode.CancellationToken): vscode.ProviderResult<string> {
+    this.counter++;
+    return `Counter is ${this.counter}\nUri : ${uri}`;
+  }
+
+  display = async (uri: vscode.Uri) => {
+
+    if (this.isOpen) {
+      console.log("Refresh!");
+      this._onDidChange.fire(vscode.Uri.parse(`${TestView.scheme}:example.txt`));
+      return;
+    }
+
+    this._isOpen = true;
+    this.michelsonDoc = await vscode.workspace.openTextDocument(vscode.Uri.parse(`${TestView.scheme}:example.txt`));
+    vscode.window.showTextDocument(this.michelsonDoc, {
+      viewColumn: vscode.ViewColumn.Beside,
+      preserveFocus: true,
+    });
+  };
+
+  public close() {
+    this._isOpen = false;
+    vscode.window.showTextDocument(this.michelsonDoc!, {
+      viewColumn: vscode.ViewColumn.Beside,
+      preserveFocus: false,
+    }).then(() => { return vscode.commands.executeCommand('workbench.action.closeActiveEditor'); });
+    this.michelsonDoc = undefined;
   }
 }

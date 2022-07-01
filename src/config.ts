@@ -14,6 +14,9 @@ export class Config {
     this._configs = vscode.workspace.getConfiguration('whylson-connector');
   }
 
+  /**
+   * Used together with the onDidChangeConfigurations event, refreshing configs object
+   */
   public refresh() {
     this._configs = vscode.workspace.getConfiguration('whylson-connector');
   }

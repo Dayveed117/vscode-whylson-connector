@@ -4,7 +4,7 @@ import { TextDecoder, TextEncoder } from 'util';
 import * as vscode from 'vscode';
 import { Config } from './config';
 import { Logger } from './logger';
-import { MichelsonView } from './michelson-view';
+import { MichelsonView, TestView } from './michelson-view';
 import { CompileContractOptions, CompileContractOutput, ContractEntryScheme, Maybe } from './types';
 import { utils } from './utils';
 
@@ -13,13 +13,14 @@ import { utils } from './utils';
  */
 export class WhylsonContext {
 
-  protected _context: vscode.ExtensionContext;
-  protected _rootFolder: Maybe<vscode.WorkspaceFolder>;
-  protected _contractsJsonUri: Maybe<vscode.Uri>;
-  protected _contractsBinUri: Maybe<vscode.Uri>;
-  protected _view: MichelsonView;
-  protected _log: Logger;
-  protected _config: Config;
+  private readonly _context: vscode.ExtensionContext;
+  private readonly _rootFolder: Maybe<vscode.WorkspaceFolder>;
+  private readonly _contractsJsonUri: Maybe<vscode.Uri>;
+  private readonly _contractsBinUri: Maybe<vscode.Uri>;
+  private readonly _view: MichelsonView;
+  private readonly _log: Logger;
+  private readonly _config: Config;
+  private readonly _viewT: TestView;
 
   /**
    * Creates a WhylsonContext instance.  
@@ -31,6 +32,7 @@ export class WhylsonContext {
     this._log = new Logger(context);
     this._config = new Config(context);
     this._view = new MichelsonView(context, this._log);
+    this._viewT = new TestView();
 
     if (this.isWorkspaceAvailable()) {
       this._rootFolder = vscode.workspace.workspaceFolders![0];
@@ -363,10 +365,13 @@ export class WhylsonContext {
     // Triggers every when any change to a document in the tabs' group is made
     // * This function only executes every 750 miliseconds
     const throttledDisplay = debounce(this.displayContractFromSource, 750, { isImmediate: false });
+    const f = debounce(this._viewT.display, 750, { isImmediate: false });
     this._context.subscriptions.push(
       vscode.workspace.onDidChangeTextDocument(async (e) => {
-        if (utils.isLigoFileDetected(e.document) && this._view.isOpen) {
-          throttledDisplay(e.document);
+        if (utils.isLigoFileDetected(e.document) && this._viewT.isOpen) {
+          // throttledDisplay(e.document);
+          console.log("changes!?");
+          f(e.document.uri);
         }
       })
     );
@@ -375,7 +380,7 @@ export class WhylsonContext {
     // This event is more reliable for knowing when a document is closed
     this._context.subscriptions.push(
       vscode.window.onDidChangeVisibleTextEditors((e) => {
-        console.log(JSON.stringify(e));
+        // console.log(JSON.stringify(e));
         // let michelsonView = e.filter((v) => { (v.document.uri.scheme === "michelson"); });
         // console.log(michelsonView);
       })
@@ -414,7 +419,8 @@ export class WhylsonContext {
     // Tester command
     this._context.subscriptions.push(
       vscode.commands.registerCommand("whylson-connector.check-ligo", async () => {
-        vscode.window.showErrorMessage("Not implemented yet.");
+        this._viewT.display(vscode.window.activeTextEditor?.document.uri!);
+        // vscode.window.showErrorMessage("Not implemented yet.");
       })
     );
 
@@ -446,7 +452,8 @@ export class WhylsonContext {
     // * Future Whylson start session
     this._context.subscriptions.push(
       vscode.commands.registerCommand("whylson-connector.start-session", () => {
-        vscode.window.showErrorMessage("Not implemented yet.");
+        this._viewT.close();
+        // vscode.window.showErrorMessage("Not implemented yet.");
       })
     );
   }
@@ -457,7 +464,11 @@ export class WhylsonContext {
   private registerProviders() {
 
     this._context.subscriptions.push(
-      vscode.workspace.registerTextDocumentContentProvider("michelson", this._view)
+      vscode.workspace.registerTextDocumentContentProvider(MichelsonView.scheme, this._view)
+    );
+
+    this._context.subscriptions.push(
+      vscode.workspace.registerTextDocumentContentProvider(TestView.scheme, this._viewT)
     );
   }
 }
