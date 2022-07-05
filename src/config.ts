@@ -29,6 +29,22 @@ export class Config {
   }
 
   /**
+   * Gets the configurations for auto saving ligo documents.
+   * @returns `true' if enabled, `false` otherwise.
+   */
+  public getDocumentAutoSave() {
+    return this._configs.get<boolean>("autoSaveDocument");
+  }
+
+  /**
+   * Gets the configurations for auto saving ligo documents.
+   * @returns `true' if enabled, `false` otherwise.
+   */
+  public getAutoSaveThreshold() {
+    return this._configs.get<number>("autoSaveThreshold");
+  }
+
+  /**
    * Controls wheather or not whylson annotations are highlighted in ligo documents.
    * @returns `true' if enabled, `false` otherwise.
    */

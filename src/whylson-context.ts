@@ -361,6 +361,25 @@ export class WhylsonContext {
     }
   };
 
+  /**
+   * Save ligo document, compile it, display it.
+   * A failed compilation displays an error in the michelson view.
+   * @param doc `vscode.TextDocument` Active ligo document.
+   */
+  // * Requires arrow function to retain the "this" context in debounced function
+  private throttledSaveAndCompile = async (doc: vscode.TextDocument) => {
+    if (!(await doc.save())) {
+      return;
+    }
+    const entry = await this.getContractEntry(doc.uri);
+    if (entry) {
+      const { status, stdout } = this.compileContract(entry, false);
+      status
+        ? this.displayContract(doc.uri, stdout)
+        : this.displayContract(doc.uri, MichelsonView.compilationError);
+    }
+  };
+
   // --------------------------------------------------------------------------
   // --------------------------------------------------------------------------
   // --------------------------------------------------------------------------
@@ -408,7 +427,7 @@ export class WhylsonContext {
 
     // Triggers every when any change to a document in the tabs' group is made
     // * This function only executes every 750 miliseconds
-    const throttledDisplay = debounce(this.displayContractFromSource, 750, {
+    const throttledDisplay = debounce(this.throttledSaveAndCompile, 750, {
       isImmediate: false,
     });
     this._context.subscriptions.push(

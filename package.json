@@ -23,10 +23,31 @@
     "configuration": {
       "title": "Whylson-Connector",
       "properties": {
+        "whylson-connector.autoSave": {
+          "type": "boolean",
+          "order": 0,
+          "default": true,
+          "description": "Auto saves document after no changes.",
+          "scope": "window"
+        },
+        "whylson-connector.autoSaveThreshold": {
+          "type": "number",
+          "order": 1,
+          "enum": [
+            0.5,
+            0.75,
+            1.0,
+            1.25,
+            1.5
+          ],
+          "default": 0.75,
+          "description": "Throttled time interval for auto saving.",
+          "scope": "window"
+        },
         "whylson-connector.onSaveActions": {
           "type": "object",
-          "order": 0,
-          "description": "Control actions performed on saving ligo documents.",
+          "order": 2,
+          "description": "Controls actions performed on saving ligo documents.",
           "properties": {
             "createEntry": {
               "type": "boolean",
@@ -34,10 +55,11 @@
             },
             "openView": {
               "type": "boolean",
-              "description": "Open michelson view if closed (entry must exist)."
+              "description": "Open michelson view if closed."
             }
           },
           "additionalProperties": false,
+          "scope": "window",
           "default": {
             "createEntry": false,
             "openView": true

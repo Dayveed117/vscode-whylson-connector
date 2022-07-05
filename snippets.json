@@ -2,42 +2,42 @@
   "whylson-equality": {
     "prefix": "whylson-eq",
     "body": [
-      "$LINE_COMMENT@ ${0:value} = ${1|int,nat,mutez,string,address|} ?"
+      "$LINE_COMMENT@ ${1|int,nat,mutez,string,address|} = ${0:value} ?"
     ],
     "description": "Equality annotation for next \"let\" expression"
   },
   "whylson-inequality": {
     "prefix": "whylson-ineq",
     "body": [
-      "$LINE_COMMENT@ ${0:value} <> ${1|int,nat,mutez,string,address|} ?"
+      "$LINE_COMMENT@ ${1|int,nat,mutez,string,address|} <> ${0:value} ?"
     ],
     "description": "Inequality annotation for next \"let\" expression"
   },
   "whylson-greater-than": {
     "prefix": "whylson-gt",
     "body": [
-      "$LINE_COMMENT@ ${0:value} > ${1|int,nat,mutez|} ?"
+      "$LINE_COMMENT@ ${1|int,nat,mutez|} > ${0:value} ?"
     ],
     "description": "\"Greater than\" annotation for next \"let\" expression"
   },
   "whylson-greater-equals": {
     "prefix": "whylson-ge",
     "body": [
-      "$LINE_COMMENT@ ${0:value} >= ${1|int,nat,mutez|} ?"
+      "$LINE_COMMENT@ ${1|int,nat,mutez|} >= ${0:value} ?"
     ],
     "description": "\"Greater equals\" annotation for next \"let\" expression"
   },
   "whylson-lesser-than": {
     "prefix": "whylson-lt",
     "body": [
-      "$LINE_COMMENT@ ${0:value} < ${1|int,nat,mutez|} ?"
+      "$LINE_COMMENT@ ${1|int,nat,mutez|} < ${0:value} ?"
     ],
     "description": "\"Lesser than\" annotation for next \"let\" expression"
   },
   "whylson-lesser-equals": {
     "prefix": "whylson-le",
     "body": [
-      "$LINE_COMMENT@ ${0:value} <= ${1|int,nat,mutez|} ?"
+      "$LINE_COMMENT@ ${1|int,nat,mutez|} <= ${0:value} ?"
     ],
     "description": "\"Lesser Equals\" annotation for next \"let\" expression"
   },

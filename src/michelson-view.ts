@@ -10,6 +10,8 @@ export class MichelsonView implements vscode.TextDocumentContentProvider {
   static readonly viewUri = vscode.Uri.parse(
     `${MichelsonView.scheme}:michelson.tz`
   );
+  static readonly compilationError =
+    "# Compilation failed\n# For more information see the output window";
 
   private _isOpen: boolean = false;
   private _onDidChange = new vscode.EventEmitter<vscode.Uri>();
