@@ -62,7 +62,7 @@
           "scope": "window",
           "default": {
             "createEntry": false,
-            "openView": true
+            "openView": false
           }
         },
         "whylson-connector.highlightAnnotations": {

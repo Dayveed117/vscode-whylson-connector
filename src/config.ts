@@ -1,5 +1,5 @@
 import * as vscode from "vscode";
-import { OnSaveActions } from "./types";
+import { Maybe, OnSaveActions } from "./types";
 
 /**
  * Encapsulation and ease of acess for extension configurations
@@ -24,7 +24,7 @@ export class Config {
    * Gets the configurations for ligo documents on save actions.
    * @returns `OnSaveActions' type or undefined if not found.
    */
-  public getOnSaveCreateActions() {
+  public getOnSaveCreateActions(): Maybe<OnSaveActions> {
     return this._configs.get<OnSaveActions>("onSaveActions");
   }
 
@@ -33,7 +33,7 @@ export class Config {
    * @returns `true' if enabled, `false` otherwise.
    */
   public getDocumentAutoSave() {
-    return this._configs.get<boolean>("autoSaveDocument");
+    return this._configs.get<boolean>("autoSave");
   }
 
   /**
