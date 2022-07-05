@@ -1,9 +1,8 @@
-import * as vscode from 'vscode';
-import { WhylsonContext } from './whylson-context';
+import * as vscode from "vscode";
+import { WhylsonContext } from "./whylson-context";
 
 // Method called when extension is activated
 export function activate(context: vscode.ExtensionContext) {
-
   // Test WhylsonContext object
   const whylsonContext = new WhylsonContext(context);
 
@@ -14,4 +13,4 @@ export function activate(context: vscode.ExtensionContext) {
 }
 
 // Method called when extension is deactivated
-export function deactivate() { }
+export function deactivate() {}

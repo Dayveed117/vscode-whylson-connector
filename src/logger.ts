@@ -1,11 +1,10 @@
-import * as vscode from 'vscode';
+import * as vscode from "vscode";
 
 /**
  * Simple logger class to help extension debugging
  * and providing information for users.
  */
 export class Logger {
-
   private _mode: vscode.ExtensionMode;
   private _extensionOutput: vscode.OutputChannel;
 
@@ -15,7 +14,8 @@ export class Logger {
    */
   constructor(context: vscode.ExtensionContext) {
     this._mode = context.extensionMode;
-    this._extensionOutput = vscode.window.createOutputChannel("Whylson-Connector");
+    this._extensionOutput =
+      vscode.window.createOutputChannel("Whylson-Connector");
   }
 
   /**
@@ -51,5 +51,4 @@ export class Logger {
   public dispose() {
     this._extensionOutput.dispose();
   }
-
 }

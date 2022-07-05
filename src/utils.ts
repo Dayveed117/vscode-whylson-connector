@@ -1,10 +1,9 @@
-import { execSync } from 'child_process';
-import { TextDecoder } from 'util';
-import * as vscode from 'vscode';
-import { CompileContractOptions, CompileContractOutput, Maybe } from './types';
+import { execSync } from "child_process";
+import { TextDecoder } from "util";
+import * as vscode from "vscode";
+import { CompileContractOptions, CompileContractOutput, Maybe } from "./types";
 
 export namespace utils {
-
   /**
    * Verifies if ligo executable is found within the sytem.
    * @returns `true` if ligo executable is found, `false` otherwise.
@@ -32,7 +31,9 @@ export namespace utils {
    * @returns `true` if active editor is a ligo file, `false` otherwise.
    */
   export function isLigoFileDetected(e: vscode.TextDocument): boolean {
-    if (!e) { return false; }
+    if (!e) {
+      return false;
+    }
     return !!e.languageId.match(/^(m|js|re)?ligo$/g);
   }
 
@@ -42,7 +43,7 @@ export namespace utils {
    */
   export function isLigoExtensionActive(): boolean {
     const a = vscode.extensions.getExtension("ligolang-publish.ligo-vscode");
-    return (!!a && a.isActive);
+    return !!a && a.isActive;
   }
 
   /**
@@ -51,9 +52,14 @@ export namespace utils {
    * @param cco `CompileContractOptions`.
    * @returns `CompileContractOutput` object.
    */
-  export function compileLigo(source: string, cco: CompileContractOptions): CompileContractOutput {
+  export function compileLigo(
+    source: string,
+    cco: CompileContractOptions
+  ): CompileContractOutput {
+    let command = `ligo compile contract ${source} -e ${
+      cco.entrypoint
+    } ${cco.flags.join(" ")}`.trimEnd();
 
-    let command = `ligo compile contract ${source} -e ${cco.entrypoint} ${cco.flags.join(" ")}`.trimEnd();
     if (cco.onPath) {
       command = command.concat(` -o ${cco.onPath}`);
     }
@@ -72,9 +78,16 @@ export namespace utils {
    * @param cco `CompileContractOptions`.
    * @returns `CompileContractOutput` object.
    */
-  export async function _compileLigo(cco: CompileContractOptions): Promise<CompileContractOutput> {
-    const result: Maybe<string> = await vscode.commands.executeCommand("ligo.silentCompileContract", cco);
-    return result === undefined ? { status: false, stdout: undefined } : { status: true, stdout: result };
+  export async function _compileLigo(
+    cco: CompileContractOptions
+  ): Promise<CompileContractOutput> {
+    const result: Maybe<string> = await vscode.commands.executeCommand(
+      "ligo.silentCompileContract",
+      cco
+    );
+    return result === undefined
+      ? { status: false, stdout: undefined }
+      : { status: true, stdout: result };
   }
 
   /**
@@ -84,7 +97,7 @@ export namespace utils {
    */
   export async function isExistsFile(uri: vscode.Uri): Promise<boolean> {
     try {
-      return !!await vscode.workspace.fs.stat(uri);
+      return !!(await vscode.workspace.fs.stat(uri));
     } catch {
       return false;
     }
@@ -93,7 +106,7 @@ export namespace utils {
   /**
    * Attempts to read a file and returns its contents as string.
    * @param uri `vscode.Uri`.
-   * @returns The contents of the resource as `string`, 
+   * @returns The contents of the resource as `string`,
    * or empty `string` if unsuccessful.
    */
   export async function readFile(uri: vscode.Uri): Promise<string> {
@@ -112,7 +125,10 @@ export namespace utils {
    * @param content `Uint8Array` encoded content
    * @returns `true` if successful, `false` otherwise.
    */
-  export async function writeFile(uri: vscode.Uri, content: Uint8Array): Promise<boolean> {
+  export async function writeFile(
+    uri: vscode.Uri,
+    content: Uint8Array
+  ): Promise<boolean> {
     try {
       await vscode.workspace.fs.writeFile(uri, content);
       return true;
@@ -122,22 +138,22 @@ export namespace utils {
   }
 
   /**
-   * Creates a quickpick with `showInputBox`.  
+   * Creates a quickpick with `showInputBox`.
    * Manually input a valid entrypoint for a ligo document.
    * @returns `string` Chosen entrypoint designation as string.
    */
   export async function entrypointInput(): Promise<Maybe<string>> {
-
     return await vscode.window.showInputBox({
       title: "First Time Ligo Compile",
       placeHolder: "main",
       prompt: "Pick entrypoint for ligo contract",
       value: "main",
-      validateInput: text => {
+      validateInput: (text) => {
         // undefined, null or empty string accepts the prompt
-        return new RegExp(/^[a-zA-Z_]+[a-zA-Z0-9'_]*$/g).test(text) ? undefined :
-          "Values must conform to ligo's function nomenclature";
-      }
+        return new RegExp(/^[a-zA-Z_]+[a-zA-Z0-9'_]*$/g).test(text)
+          ? undefined
+          : "Values must conform to ligo's function nomenclature";
+      },
     });
   }
 }

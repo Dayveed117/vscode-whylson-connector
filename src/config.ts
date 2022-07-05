@@ -1,24 +1,23 @@
-import * as vscode from 'vscode';
-import { OnSaveActions } from './types';
+import * as vscode from "vscode";
+import { OnSaveActions } from "./types";
 
 /**
  * Encapsulation and ease of acess for extension configurations
  */
 export class Config {
-
   private _context: vscode.ExtensionContext;
   private _configs: vscode.WorkspaceConfiguration;
 
   constructor(context: vscode.ExtensionContext) {
     this._context = context;
-    this._configs = vscode.workspace.getConfiguration('whylson-connector');
+    this._configs = vscode.workspace.getConfiguration("whylson-connector");
   }
 
   /**
    * Used together with the onDidChangeConfigurations event, refreshing configs object
    */
   public refresh() {
-    this._configs = vscode.workspace.getConfiguration('whylson-connector');
+    this._configs = vscode.workspace.getConfiguration("whylson-connector");
   }
 
   /**
