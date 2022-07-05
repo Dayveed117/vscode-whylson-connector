@@ -23,7 +23,7 @@ export interface CompileContractOptions {
 }
 
 /**
- *
+ * The object resulting out of ligo document compilation.
  */
 export interface CompileContractOutput {
   /**
@@ -42,7 +42,7 @@ export interface CompileContractOutput {
 }
 
 /**
- * Type of entries present in contracts.json.
+ * Type of entries present in `contracts.json`.
  */
 export interface ContractEntryScheme extends CompileContractOptions {
   /**
@@ -61,7 +61,7 @@ export interface ContractEntryScheme extends CompileContractOptions {
 }
 
 /**
- * Type of configurations under whylson-connector.onSaveActions.
+ * Type of configurations under `whylson-connector.onSaveActions`.
  */
 export type OnSaveActions = {
   /**
