@@ -1,7 +1,12 @@
 import { execSync } from "child_process";
 import { TextDecoder } from "util";
 import * as vscode from "vscode";
-import { CompileContractOptions, CompileContractOutput, Maybe } from "./types";
+import {
+  CompileContractOptions,
+  CompileContractOutput,
+  ExecutionResult,
+  Maybe,
+} from "./types";
 
 export namespace utils {
   /**
@@ -80,14 +85,11 @@ export namespace utils {
    */
   export async function _compileLigo(
     cco: CompileContractOptions
-  ): Promise<CompileContractOutput> {
-    const result: Maybe<string> = await vscode.commands.executeCommand(
-      "ligo.silentCompileContract",
-      cco
-    );
-    return result === undefined
-      ? { status: false, stdout: undefined }
-      : { status: true, stdout: result };
+  ): Promise<ExecutionResult> {
+    return await vscode.commands.executeCommand("ligo.silentCompileContract", {
+      ...cco,
+      printToConsole: false,
+    });
   }
 
   /**

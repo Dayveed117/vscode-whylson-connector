@@ -42,6 +42,15 @@ export interface CompileContractOutput {
 }
 
 /**
+ * Object type returned after compile ligo command from ligo-vscode extension.
+ */
+export type ExecutionResult =
+  | { t: "Success"; result: string }
+  | { t: "NoLigoPath" }
+  | { t: "UnknownCommandType" }
+  | { t: "LigoExecutionException"; error: string };
+
+/**
  * Type of entries present in `contracts.json`.
  */
 export interface ContractEntryScheme extends CompileContractOptions {

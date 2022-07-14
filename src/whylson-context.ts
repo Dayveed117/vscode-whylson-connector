@@ -5,7 +5,12 @@ import * as vscode from "vscode";
 import { Config } from "./config";
 import { Logger } from "./logger";
 import { MichelsonView } from "./michelson-view";
-import { CompileContractOutput, ContractEntryScheme, Maybe } from "./types";
+import {
+  CompileContractOutput,
+  ContractEntryScheme,
+  ExecutionResult,
+  Maybe,
+} from "./types";
 import { utils } from "./utils";
 
 /**
@@ -294,10 +299,7 @@ export class WhylsonContext {
    * @param ces `ContractEntryScheme`.
    * @returns `CompileContractOutput`.
    */
-  private async _compileContract(
-    ces: ContractEntryScheme,
-    save: boolean
-  ): Promise<CompileContractOutput> {
+  private async _compileContract(ces: ContractEntryScheme, save: boolean) {
     // We should not change original ces object
     // use object destructuring and rest operator
     return save
@@ -377,7 +379,6 @@ export class WhylsonContext {
    */
   private registerEvents() {
     // Triggers every when any change to a document in the tabs' group is made
-    // * This function only executes every 750 miliseconds
     const throttledDisplay = debounce(this.throttledSaveAndCompile, 750, {
       isImmediate: false,
     });
@@ -399,7 +400,8 @@ export class WhylsonContext {
     this._context.subscriptions.push(
       vscode.workspace.onDidSaveTextDocument(async (e) => {
         // Ignore if not ligo document
-        // * Autosave turned on renders manual save operations useless
+        // Autosave turned on renders manual save operations useless
+        // when michelson view is open
         if (
           !utils.isLigoFileDetected(e) ||
           (this._config.getDocumentAutoSave() && this._view.isOpen)
@@ -478,7 +480,25 @@ export class WhylsonContext {
       vscode.commands.registerCommand(
         "whylson-connector.check-ligo",
         async () => {
-          vscode.window.showErrorMessage("Not implemented yet.");
+          // vscode.window.showErrorMessage("Not implemented yet.");
+          const entry = await this.getContractEntry(
+            vscode.window.activeTextEditor!.document.uri
+          );
+          if (!entry) {
+            return;
+          }
+          const result: ExecutionResult = await this._compileContract(
+            entry!,
+            false
+          );
+          switch (result.t) {
+            case "Success":
+              console.log(result.result);
+              break;
+            case "LigoExecutionException":
+              console.log(result.error);
+              break;
+          }
         }
       )
     );
