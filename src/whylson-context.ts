@@ -21,9 +21,9 @@ export class WhylsonContext {
   private readonly _rootFolder: Maybe<vscode.WorkspaceFolder>;
   private readonly _contractsJsonUri: Maybe<vscode.Uri>;
   private readonly _contractsBinUri: Maybe<vscode.Uri>;
-  private readonly _view: MichelsonView;
   private readonly _log: Logger;
   private readonly _config: Config;
+  private _views: Map<vscode.Uri, MichelsonView>;
 
   /**
    * Creates a WhylsonContext instance.
@@ -34,7 +34,7 @@ export class WhylsonContext {
     this._context = context;
     this._log = new Logger(context);
     this._config = new Config(context);
-    this._view = new MichelsonView(this._log);
+    this._views = new Map<vscode.Uri, MichelsonView>();
 
     if (this.isWorkspaceAvailable()) {
       this._rootFolder = vscode.workspace.workspaceFolders![0];
@@ -340,6 +340,7 @@ export class WhylsonContext {
    */
   private async displayContract(uri: vscode.Uri, text: Maybe<string>) {
     const contractText = text ? text : await utils.readFile(uri);
+    // TODO : adjust to instance
     this._view.display(contractText);
   }
 
@@ -386,6 +387,7 @@ export class WhylsonContext {
       vscode.workspace.onDidChangeTextDocument(async (e) => {
         // Only perform onChange operations when in ligo document
         // with michelson view open
+        // TODO : adjust logic for instance
         if (
           utils.isLigoFileDetected(e.document) &&
           this._config.getDocumentAutoSave() &&
@@ -402,6 +404,7 @@ export class WhylsonContext {
         // Ignore if not ligo document
         // Autosave turned on renders manual save operations useless
         // when michelson view is open
+        // TODO : adjust logic for instance
         if (
           !utils.isLigoFileDetected(e) ||
           (this._config.getDocumentAutoSave() && this._view.isOpen)
@@ -435,6 +438,7 @@ export class WhylsonContext {
     this._context.subscriptions.push(
       vscode.window.onDidChangeVisibleTextEditors((e) => {
         // If michelson view is not visible, but is open, close it
+        // TODO : Adjust logic for instance
         const visible =
           e.filter((v) => v.document.uri.scheme === "michelson").length >= 1;
         if (!visible && this._view.isOpen) {
@@ -551,7 +555,8 @@ export class WhylsonContext {
     this._context.subscriptions.push(
       vscode.workspace.registerTextDocumentContentProvider(
         MichelsonView.scheme,
-        this._view
+        // TODO : Check if this works
+        new MichelsonView(this._log)
       )
     );
   }
