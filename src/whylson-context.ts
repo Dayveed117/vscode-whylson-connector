@@ -22,6 +22,9 @@ export class WhylsonContext {
   private _entries: ContractEntryScheme[] = [];
   private _views: Map<vscode.Uri, MichelsonView>;
 
+  private readonly cjpath = ".whylson/contracts.json" as const;
+  private readonly cbpath = ".whylson/bin-contracts" as const;
+
   /**
    * Creates a WhylsonContext instance.
    * Constructor solely establishes safe base values if trusted workspace exists.
@@ -42,28 +45,33 @@ export class WhylsonContext {
 
     this._rootFolder = vscode.workspace.workspaceFolders![0];
     this._contractsJsonUri = vscode.Uri.parse(
-      posix.join(this._rootFolder.uri.path, ".whylson/contracts.json")
+      posix.join(this._rootFolder.uri.path, this.cjpath)
     );
     this._contractsBinUri = vscode.Uri.parse(
-      posix.join(this._rootFolder.uri.path, ".whylson/bin-contracts")
+      posix.join(this._rootFolder.uri.path, this.cbpath)
     );
     this._watcher = vscode.workspace.createFileSystemWatcher(
-      new vscode.RelativePattern(this._rootFolder, ".whylson/contracts.json"),
+      new vscode.RelativePattern(this._rootFolder, this.cjpath),
+      true,
       false,
-      false,
-      false
+      true
     );
   }
 
   /**
    * Registers commands, events, providers and initializes `.whylson` folder.
    */
-  activate() {
-    this.checkups();
-    this.initWhylsonFolder();
-    this.registerEvents();
-    this.registerCommands();
-    this.registerProviders();
+  public async activate() {
+    if (this.checkups() && (await this.initWhylsonFolder())) {
+      this.registerEvents();
+      this.registerCommands();
+      this.registerProviders();
+    } else {
+      vscode.window.showErrorMessage(
+        `${this._context.extension.id} is unable to run.`
+      );
+      this.deactivate();
+    }
   }
 
   /**
@@ -92,7 +100,7 @@ export class WhylsonContext {
    */
   private async initWhylsonFolder() {
     if (!this._rootFolder) {
-      return;
+      return false;
     }
 
     // Verify if ".whylson/contracts.json" exists
@@ -107,6 +115,8 @@ export class WhylsonContext {
     if (!(await utils.isExistsFile(this._contractsBinUri!))) {
       this.createContractsDir(false);
     }
+
+    return true;
   }
 
   /**
@@ -118,11 +128,8 @@ export class WhylsonContext {
   private checkups() {
     const a = utils.isLigoExtensionActive();
     const b = utils.verifyLigoBinaries();
-    // ? Verify if whylson is on machine
-    if (!a || !b) {
-      vscode.window.showErrorMessage("Whylson-Connector cannot run, aborting");
-      this.deactivate();
-    }
+    // ? Also verify if whylson is on machine
+    return a && b;
   }
 
   /**
@@ -141,34 +148,26 @@ export class WhylsonContext {
         }`
       );
     } catch {
-      vscode.window.showErrorMessage(
-        'Unable to create ".whylson/contracts.json"'
-      );
+      vscode.window.showErrorMessage(`Unable to create ${this.cjpath}`);
     }
   }
 
   /**
    * Creates a new `".whylson/bin-contracts"` folder.
-   * @param reset `boolean` If `true` recursively deletes contents and recreates folder.
+   * @param reset If `true` recursively deletes contents and recreates folder.
    */
   private async createContractsDir(reset: boolean) {
-    if (reset) {
-      try {
+    try {
+      if (reset) {
         await vscode.workspace.fs.delete(this._contractsBinUri!, {
           recursive: true,
         });
-      } catch {
-        vscode.window.showErrorMessage('Unable to delete ".whylson" folder');
-        return;
+      } else {
+        await vscode.workspace.fs.createDirectory(this._contractsBinUri!);
+        this._log.info(`Created directory at ${this._contractsBinUri!.path}`);
       }
-    }
-    try {
-      await vscode.workspace.fs.createDirectory(this._contractsBinUri!);
-      this._log.info(`Created directory at ${this._contractsBinUri!.path}`);
-    } catch (error) {
-      vscode.window.showErrorMessage(
-        'Unable to create ".whylson/bin-contracts" folder'
-      );
+    } catch {
+      vscode.window.showErrorMessage(`Unable to create ${this.cbpath}`);
     }
   }
 
@@ -177,26 +176,25 @@ export class WhylsonContext {
    */
   private async loadContractEntries() {
     const contents = await utils.readFile(this._contractsJsonUri!);
-    this._entries = utils.safeParse(contents) || [];
+    this._entries = utils.safeParse(contents) || this._entries;
   }
 
   /**
    * Builds the michelson contract path from ligo document path.
-   * @param path `string` Path to ligo document source.
-   * @param shorten `boolean` Flag to control return value.
-   * @returns `string` File path to michelson contract.
+   * @param path Path to ligo document source.
+   * @param shorten Flag to control return value.
+   * @returns File path to michelson contract.
    */
-  private ligoToMichelsonPath(path: string, shorten: boolean = true): string {
+  private ligoToMichelsonPath(path: string, shorten: boolean): string {
     const fname = posix.basename(path).split(".")[0].concat(".tz");
     return shorten ? fname : posix.join(this._contractsBinUri!.path, fname);
   }
 
   /**
    * Creates entry for activo ligo document on `".whylson/contracts.json"`.
-   * @param uri `vscode.Uri`. Uri of the active ligo document.
-   * @return `Maybe<ContractEntryScheme>`.
+   * @param uri Uri of the active ligo document.
+   * @return Maybe a `ContractEntryScheme` or a promise to.
    */
-  // TODO : Adjust to have list instead of I/O
   private async createContractEntry(
     uri: vscode.Uri
   ): Promise<Maybe<ContractEntryScheme>> {
@@ -206,16 +204,9 @@ export class WhylsonContext {
       return undefined;
     }
 
-    // TODO : Is there any way to get rid of ligoToMichelsonPath?
-    const contractEntry: ContractEntryScheme = {
-      title: posix.basename(uri.path).split(".")[0],
-      source: uri.path,
-      onPath: this.ligoToMichelsonPath(uri.path, false),
-      entrypoint: ep,
-      flags: [],
-    };
-
+    // Create a new contract entry from active ligo doc and chosen entrypoint
     // Update internal list of entries, update `contracts.json`.
+    const contractEntry = utils.createEntry(uri, ep, this.ligoToMichelsonPath);
     this._entries.push(contractEntry);
     utils.writeFile(this._contractsJsonUri!, this._entries);
 
@@ -358,9 +349,9 @@ export class WhylsonContext {
     throw new Error("Method not implemented.");
   }
 
-  // -------------------------------------------------------- //
-  //                     EVENTS & COMMANDS                    //
-  // -------------------------------------------------------- //
+  // ------------------------------------------------------------------- //
+  //                     EVENTS & COMMANDS & PROVIDERS                   //
+  // ------------------------------------------------------------------- //
 
   /**
    * Registers events that concern whylson context.
@@ -401,7 +392,7 @@ export class WhylsonContext {
 
         // Find if contract has entry
         // If not, attempt to create entry, depending on extension configuration
-        let entry = await this.getContractEntry(e.uri);
+        let entry = this.getContractEntry(e.uri);
         if (!entry && this._config.getOnSaveCreateActions()?.createEntry) {
           entry = await this.createContractEntry(e.uri);
         }

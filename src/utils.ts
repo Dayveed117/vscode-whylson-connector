@@ -1,4 +1,5 @@
 import { execSync, Serializable } from "child_process";
+import { posix } from "path";
 import { TextDecoder, TextEncoder } from "util";
 import * as vscode from "vscode";
 import {
@@ -50,6 +51,27 @@ export namespace utils {
   export function isLigoExtensionActive(): boolean {
     const a = vscode.extensions.getExtension("ligolang-publish.ligo-vscode");
     return !!a && a.isActive;
+  }
+
+  /**
+   * Creates a `ContractEntryScheme` object from params.
+   * @param uri Path to ligo document source.
+   * @param entrypoint Entrypoint to michelson contract as string.
+   * @param f Function transforming uri param into michelson file path.
+   * @returns A `ContractEntryScheme` object.
+   */
+  export function createEntry(
+    uri: vscode.Uri,
+    entrypoint: string,
+    f: (path: string, shorten: boolean) => string
+  ): ContractEntryScheme {
+    return {
+      title: posix.basename(uri.path).split(".")[0],
+      source: uri.path,
+      onPath: f(uri.path, false),
+      entrypoint: entrypoint,
+      flags: [],
+    };
   }
 
   /**
@@ -158,9 +180,9 @@ export namespace utils {
   }
 
   /**
-   * Parse string contents into type parameter type.
+   * Parse string contents into type parameter `type`.
    * @param contents String representation of initial contents.
-   * @returns Contents parsed into type parameter type.
+   * @returns Contents parsed into type parameter `type`.
    */
   export function safeParse<T>(contents: string): Maybe<T> {
     try {
