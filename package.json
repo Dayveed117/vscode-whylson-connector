@@ -99,6 +99,12 @@
         "icon": "$(go-to-file)"
       },
       {
+        "command": "whylson-connector.erase-contract-info",
+        "enablement": "resourceLangId =~ /^(m|js|re)?ligo$/",
+        "category": "Whylson",
+        "title": "Erase Document Data"
+      },
+      {
         "command": "whylson-connector.remake-dot-whylson",
         "enablement": "resourceLangId =~ /^(m|js|re)?ligo$/",
         "category": "Whylson",

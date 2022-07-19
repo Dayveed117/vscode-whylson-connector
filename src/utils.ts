@@ -1,9 +1,10 @@
-import { execSync } from "child_process";
-import { TextDecoder } from "util";
+import { execSync, Serializable } from "child_process";
+import { TextDecoder, TextEncoder } from "util";
 import * as vscode from "vscode";
 import {
   CompileContractOptions,
   CompileContractOutput,
+  ContractEntryScheme,
   ExecutionResult,
   Maybe,
 } from "./types";
@@ -80,8 +81,8 @@ export namespace utils {
 
   /**
    * Calls to ligo.silentCompileContract command with compile contract options.
-   * @param cco `CompileContractOptions`.
-   * @returns `CompileContractOutput` object.
+   * @param cco Set of compilation options for a ligo contract.
+   * @returns Set of contract compilation results as `ExecutionResult` or a promise to one.
    */
   export async function _compileLigo(
     cco: CompileContractOptions
@@ -94,7 +95,7 @@ export namespace utils {
 
   /**
    * Evaluate `vscode.Uri` to an existing resource.
-   * @param uri `vscode.Uri`.
+   * @param uri The file uri subject to existence check.
    * @returns `true` if argument represents an existing resource, `false` otherwise.
    */
   export async function isExistsFile(uri: vscode.Uri): Promise<boolean> {
@@ -114,8 +115,8 @@ export namespace utils {
   export async function readFile(uri: vscode.Uri): Promise<string> {
     try {
       let encoded = await vscode.workspace.fs.readFile(uri);
-      let contract = new TextDecoder("utf-8").decode(encoded);
-      return contract;
+      let decoded = new TextDecoder("utf-8").decode(encoded);
+      return decoded;
     } catch {
       return "";
     }
@@ -124,18 +125,48 @@ export namespace utils {
   /**
    * Attempts to write content into uri descriptor.
    * @param uri `vscode.Uri`
-   * @param content `Uint8Array` encoded content
+   * @param contents `Uint8Array` encoded content
    * @returns `true` if successful, `false` otherwise.
    */
   export async function writeFile(
     uri: vscode.Uri,
-    content: Uint8Array
+    contents: Serializable
   ): Promise<boolean> {
     try {
-      await vscode.workspace.fs.writeFile(uri, content);
+      await vscode.workspace.fs.writeFile(
+        uri,
+        new TextEncoder().encode(JSON.stringify(contents))
+      );
       return true;
     } catch {
       return false;
+    }
+  }
+
+  /**
+   * Attepmts to delete resource in specified uri.
+   * @param uri `vscode.Uri`
+   * @returns `true` if successful, `false` otherwise.
+   */
+  export async function deleteFile(uri: vscode.Uri): Promise<boolean> {
+    try {
+      await vscode.workspace.fs.delete(uri, { useTrash: false });
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  /**
+   * Parse string contents into type parameter type.
+   * @param contents String representation of initial contents.
+   * @returns Contents parsed into type parameter type.
+   */
+  export function safeParse<T>(contents: string): Maybe<T> {
+    try {
+      return JSON.parse(contents) as T;
+    } catch {
+      return undefined;
     }
   }
 
