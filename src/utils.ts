@@ -34,7 +34,7 @@ export namespace utils {
 
   /**
    * Verifies if current focused file is ligo language.
-   * @param e `vscode.TextDocument` The active editor for vscode instance.
+   * @param e The active editor for vscode instance.
    * @returns `true` if active editor is a ligo file, `false` otherwise.
    */
   export function isLigoFileDetected(e: vscode.TextDocument): boolean {
@@ -55,7 +55,7 @@ export namespace utils {
 
   /**
    * Creates a `ContractEntryScheme` object from params.
-   * @param uri Path to ligo document source.
+   * @param uri Uri of ligo document source.
    * @param entrypoint Entrypoint to michelson contract as string.
    * @param f Function transforming uri param into michelson file path.
    * @returns A `ContractEntryScheme` object.
@@ -63,12 +63,12 @@ export namespace utils {
   export function createEntry(
     uri: vscode.Uri,
     entrypoint: string,
-    f: (path: string, shorten: boolean) => string
+    f: (path: string) => string
   ): ContractEntryScheme {
     return {
       title: posix.basename(uri.path).split(".")[0],
       source: uri.path,
-      onPath: f(uri.path, false),
+      onPath: f(uri.path),
       entrypoint: entrypoint,
       flags: [],
     };
@@ -76,8 +76,8 @@ export namespace utils {
 
   /**
    * Compiles the active ligo document using a set of options.
-   * @param source `string` File path to active ligo document.
-   * @param cco `CompileContractOptions`.
+   * @param source File path to active ligo document.
+   * @param cco Set of compilation options for a ligo contract.
    * @returns `CompileContractOutput` object.
    */
   export function compileLigo(
@@ -102,7 +102,7 @@ export namespace utils {
   }
 
   /**
-   * Calls to ligo.silentCompileContract command with compile contract options.
+   * Calls to `ligo.silentCompileContract` command with compile contract options.
    * @param cco Set of compilation options for a ligo contract.
    * @returns Set of contract compilation results as `ExecutionResult` or a promise to one.
    */
@@ -116,8 +116,25 @@ export namespace utils {
   }
 
   /**
+   * Extract and parse data from ligo compilation process.
+   * @param results Object pertaining information regarding ligo compilation.
+   * @returns Data parsed from compilation results.
+   */
+  // TODO : Properly implement function
+  export function extractResults(results: ExecutionResult) {
+    switch (results.t) {
+      case "Success":
+        return results.result;
+      case "LigoExecutionException":
+        return results.error;
+      default:
+        return results.t as string;
+    }
+  }
+
+  /**
    * Evaluate `vscode.Uri` to an existing resource.
-   * @param uri The file uri subject to existence check.
+   * @param uri Uri subject to existence check.
    * @returns `true` if argument represents an existing resource, `false` otherwise.
    */
   export async function isExistsFile(uri: vscode.Uri): Promise<boolean> {
@@ -130,11 +147,11 @@ export namespace utils {
 
   /**
    * Attempts to read a file and returns its contents as string.
-   * @param uri `vscode.Uri`.
+   * @param uri Uri of the file to be read.
    * @returns The contents of the resource as `string`,
-   * or empty `string` if unsuccessful.
+   * or `empty string` if unsuccessful.
    */
-  export async function readFile(uri: vscode.Uri): Promise<string> {
+  export async function safeRead(uri: vscode.Uri): Promise<string> {
     try {
       let encoded = await vscode.workspace.fs.readFile(uri);
       let decoded = new TextDecoder("utf-8").decode(encoded);
@@ -146,11 +163,11 @@ export namespace utils {
 
   /**
    * Attempts to write content into uri descriptor.
-   * @param uri `vscode.Uri`
-   * @param contents `Uint8Array` encoded content
+   * @param uri Uri of the file to be written on.
+   * @param contents Contents to be written to the file
    * @returns `true` if successful, `false` otherwise.
    */
-  export async function writeFile(
+  export async function safeWrite(
     uri: vscode.Uri,
     contents: Serializable
   ): Promise<boolean> {
@@ -167,12 +184,29 @@ export namespace utils {
 
   /**
    * Attepmts to delete resource in specified uri.
-   * @param uri `vscode.Uri`
+   * @param uri Uri of the resource(s) to be deleted.
    * @returns `true` if successful, `false` otherwise.
    */
-  export async function deleteFile(uri: vscode.Uri): Promise<boolean> {
+  export async function safeDelete(
+    uri: vscode.Uri,
+    options: Maybe<{ recursive?: boolean; useTrash?: boolean }>
+  ): Promise<boolean> {
     try {
-      await vscode.workspace.fs.delete(uri, { useTrash: false });
+      await vscode.workspace.fs.delete(uri, options);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  /**
+   * Attempts to create a new directory at designed destination.
+   * @param uri Uri of the destination folder.
+   * @returns `true` if successful, `false` otherwise.
+   */
+  export async function safeCreateDir(uri: vscode.Uri): Promise<boolean> {
+    try {
+      await vscode.workspace.fs.createDirectory(uri);
       return true;
     } catch {
       return false;
@@ -195,7 +229,7 @@ export namespace utils {
   /**
    * Creates a quickpick with `showInputBox`.
    * Manually input a valid entrypoint for a ligo document.
-   * @returns `string` Chosen entrypoint designation as string.
+   * @returns Chosen entrypoint designation as string.
    */
   export async function entrypointInput(): Promise<Maybe<string>> {
     return await vscode.window.showInputBox({
