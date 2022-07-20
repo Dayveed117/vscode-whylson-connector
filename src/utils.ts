@@ -66,9 +66,9 @@ export namespace utils {
     f: (path: string) => string
   ): ContractEntryScheme {
     return {
-      title: posix.basename(uri.path).split(".")[0],
-      source: uri.path,
-      onPath: f(uri.path),
+      title: posix.basename(uri.fsPath).split(".")[0],
+      source: uri.fsPath,
+      onPath: f(uri.fsPath),
       entrypoint: entrypoint,
       flags: [],
     };
@@ -116,6 +116,19 @@ export namespace utils {
   }
 
   /**
+   * Preppend all lines of text with `"# "`.
+   * @param content Text as a string.
+   * @returns The same text with each line preppended with `"# "`.
+   */
+  function commentMichelson(content: string) {
+    const lines = content.split("\n");
+    let arr = lines.map((line) => {
+      return `# ${line}\n`;
+    });
+    return arr.join("\n");
+  }
+
+  /**
    * Extract and parse data from ligo compilation process.
    * @param results Object pertaining information regarding ligo compilation.
    * @returns Data parsed from compilation results.
@@ -126,7 +139,7 @@ export namespace utils {
       case "Success":
         return results.result;
       case "LigoExecutionException":
-        return results.error;
+        return commentMichelson(results.error);
       default:
         return results.t as string;
     }
