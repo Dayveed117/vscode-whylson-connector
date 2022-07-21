@@ -54,21 +54,21 @@ export namespace utils {
   }
 
   /**
-   * Creates a `ContractEntryScheme` object from params.
-   * @param uri Uri of ligo document source.
+   * Creates and returns `ContractEntryScheme` object from params.
+   * @param ligoPath Path to a ligo document.
+   * @param michelsonPath Destination path for compilations of specified ligo document.
    * @param entrypoint Entrypoint to michelson contract as string.
-   * @param f Function transforming uri param into michelson file path.
    * @returns A `ContractEntryScheme` object.
    */
   export function createEntry(
-    uri: vscode.Uri,
-    entrypoint: string,
-    f: (path: string) => string
+    ligoPath: string,
+    michelsonPath: string,
+    entrypoint: string
   ): ContractEntryScheme {
     return {
-      title: posix.basename(uri.fsPath).split(".")[0],
-      source: uri.fsPath,
-      onPath: f(uri.fsPath),
+      title: posix.basename(ligoPath).split(".")[0],
+      source: ligoPath,
+      onPath: michelsonPath,
       entrypoint: entrypoint,
       flags: [],
     };

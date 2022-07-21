@@ -10,7 +10,7 @@ export class ViewManager implements vscode.TextDocumentContentProvider {
   private readonly _log: Logger;
   private readonly _context: vscode.ExtensionContext;
   private readonly _onDidChange = new vscode.EventEmitter<vscode.Uri>();
-  private _views: Map<vscode.Uri, MichelsonView>;
+  private _views: Map<string, MichelsonView>;
 
   get onDidChange() {
     return this._onDidChange.event;
@@ -19,7 +19,7 @@ export class ViewManager implements vscode.TextDocumentContentProvider {
   constructor(context: vscode.ExtensionContext, logger: Logger) {
     this._context = context;
     this._log = logger;
-    this._views = new Map<vscode.Uri, MichelsonView>();
+    this._views = new Map<string, MichelsonView>();
   }
 
   /**
@@ -29,8 +29,9 @@ export class ViewManager implements vscode.TextDocumentContentProvider {
    */
   provideTextDocumentContent(uri: vscode.Uri): string {
     // Simply return the contents of the Michelson View instance mapped by the michelson uri
-    const view = this._views.get(uri);
-    return view ? view.contents : `# Contents of ${uri.fsPath} are empty`;
+    const view = this._views.get(uri.fsPath);
+    this.debugMap();
+    return view ? view.contents : `# Contents of ${uri} are empty`;
   }
 
   /**
@@ -44,7 +45,9 @@ export class ViewManager implements vscode.TextDocumentContentProvider {
     michelsonUri: vscode.Uri,
     contents: string
   ) {
-    let view = this._views.get(michelsonUri);
+    // Update scheme for michelson syntax coloring
+    michelsonUri = michelsonUri.with({ scheme: ViewManager.scheme });
+    let view = this._views.get(michelsonUri.fsPath);
 
     // Document attribute might become nullable unexpectedly
     if (!view || !view.doc) {
@@ -63,6 +66,11 @@ export class ViewManager implements vscode.TextDocumentContentProvider {
     });
   }
 
+  public isMichelsonViewDisplayed = (uri: vscode.Uri) => {
+    const view = this._views.get(uri.fsPath);
+    return !view ? false : !view.doc ? false : true;
+  };
+
   /**
    * Create an instance of Michelson View for a ligo document uri.
    * @param ligoUri Uri of the ligo document whose contract representation is to be instatiated.
@@ -75,8 +83,8 @@ export class ViewManager implements vscode.TextDocumentContentProvider {
     contents: string
   ): Promise<MichelsonView> {
     const doc = await vscode.workspace.openTextDocument(michelsonUri);
-    const newView = new MichelsonView(ligoUri, doc, contents);
-    this._views.set(michelsonUri, newView);
+    const newView = { ligoUri, doc, contents };
+    this._views.set(michelsonUri.fsPath, newView);
 
     return newView;
   }
@@ -88,39 +96,33 @@ export class ViewManager implements vscode.TextDocumentContentProvider {
    */
   private updateContents(view: MichelsonView, contents: string) {
     view.contents = contents;
-    this._views.set(view.doc.uri, view);
+    this._views.set(view.doc.uri.fsPath, view);
+  }
+
+  private debugMap() {
+    for (const [k, v] of this._views) {
+      console.log(k);
+      console.log(v);
+    }
   }
 }
 
 /**
  * Representation of a michelson document
  */
-class MichelsonView {
-  private _ligoUri: vscode.Uri;
-  private _doc: vscode.TextDocument;
-  private _contents: string;
+interface MichelsonView {
+  /**
+   * Uri of the ligo source file whose this michelson was compiled from.
+   */
+  ligoUri: vscode.Uri;
 
-  constructor(ligoUri: vscode.Uri, doc: vscode.TextDocument, contents: string) {
-    this._ligoUri = ligoUri;
-    this._doc = doc;
-    this._contents = contents;
-  }
+  /**
+   * vscode document object for this michelson file.
+   */
+  doc: vscode.TextDocument;
 
-  public get ligoUri(): vscode.Uri {
-    return this._ligoUri;
-  }
-
-  public get doc(): vscode.TextDocument {
-    return this._doc;
-  }
-  public set doc(value: vscode.TextDocument) {
-    this._doc = value;
-  }
-
-  public get contents(): string {
-    return this._contents;
-  }
-  public set contents(value: string) {
-    this._contents = value;
-  }
+  /**
+   * Current contents for the michelson file.
+   */
+  contents: string;
 }
