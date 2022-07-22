@@ -1,5 +1,6 @@
 import * as vscode from "vscode";
 import { Logger } from "./logger";
+import { Maybe } from "./types";
 
 /**
  * Manager class for Michelson Views instances
@@ -30,7 +31,6 @@ export class ViewManager implements vscode.TextDocumentContentProvider {
   provideTextDocumentContent(uri: vscode.Uri): string {
     // Simply return the contents of the Michelson View instance mapped by the michelson uri
     const view = this._views.get(uri.fsPath);
-    this.debugMap();
     return view ? view.contents : `# Contents of ${uri} are empty`;
   }
 
@@ -49,27 +49,26 @@ export class ViewManager implements vscode.TextDocumentContentProvider {
     michelsonUri = michelsonUri.with({ scheme: ViewManager.scheme });
     let view = this._views.get(michelsonUri.fsPath);
 
-    // Document attribute might become nullable unexpectedly
-    if (!view || !view.doc) {
+    // Document attribute might be closed unexpectedly
+    if (!view || view.doc!.isClosed) {
       view = await this.createView(ligoUri, michelsonUri, contents);
     } else {
-      // Refresh michelson view with the new content
       // fire method triggers provideTextDocumentContent
       this.updateContents(view, contents);
       this._onDidChange.fire(michelsonUri);
     }
 
-    vscode.window.showTextDocument(view.doc, {
-      viewColumn: vscode.ViewColumn.Beside,
-      preserveFocus: true,
-      preview: true,
-    });
+    view.show();
   }
 
-  public isMichelsonViewDisplayed = (uri: vscode.Uri) => {
-    const view = this._views.get(uri.fsPath);
-    return !view ? false : !view.doc ? false : true;
-  };
+  /**
+   * Attempt to fetch MichelsonView from parameter.
+   * @param uri Uri of for a michelson file.
+   * @returns Possibly a MichelsonView instance for specified uri.
+   */
+  public getView(uri: vscode.Uri): Maybe<MichelsonView> {
+    return this._views.get(uri.fsPath);
+  }
 
   /**
    * Create an instance of Michelson View for a ligo document uri.
@@ -82,9 +81,13 @@ export class ViewManager implements vscode.TextDocumentContentProvider {
     michelsonUri: vscode.Uri,
     contents: string
   ): Promise<MichelsonView> {
-    const doc = await vscode.workspace.openTextDocument(michelsonUri);
-    const newView = { ligoUri, doc, contents };
+    // openTextDocument should only be done after newView is added to map
+    const newView = new MichelsonView(ligoUri, contents);
     this._views.set(michelsonUri.fsPath, newView);
+
+    // openTextDocument triggers provideTextDocumentContent
+    const doc = await vscode.workspace.openTextDocument(michelsonUri);
+    newView.doc = doc;
 
     return newView;
   }
@@ -96,33 +99,48 @@ export class ViewManager implements vscode.TextDocumentContentProvider {
    */
   private updateContents(view: MichelsonView, contents: string) {
     view.contents = contents;
-    this._views.set(view.doc.uri.fsPath, view);
-  }
-
-  private debugMap() {
-    for (const [k, v] of this._views) {
-      console.log(k);
-      console.log(v);
-    }
+    // doc attribute in class is always present in after it is set the first time
+    this._views.set(view.doc!.uri.fsPath, view);
   }
 }
 
 /**
  * Representation of a michelson document
  */
-interface MichelsonView {
-  /**
-   * Uri of the ligo source file whose this michelson was compiled from.
-   */
-  ligoUri: vscode.Uri;
+class MichelsonView {
+  private _ligoUri: vscode.Uri;
+  private _contents: string;
+  private _doc: Maybe<vscode.TextDocument>;
 
-  /**
-   * vscode document object for this michelson file.
-   */
-  doc: vscode.TextDocument;
+  constructor(ligoUri: vscode.Uri, contents: string) {
+    this._ligoUri = ligoUri;
+    this._contents = contents;
+  }
 
-  /**
-   * Current contents for the michelson file.
-   */
-  contents: string;
+  public get ligoUri(): vscode.Uri {
+    return this._ligoUri;
+  }
+
+  public get contents(): string {
+    return this._contents;
+  }
+  public set contents(value: string) {
+    this._contents = value;
+  }
+
+  public get doc(): Maybe<vscode.TextDocument> {
+    return this._doc;
+  }
+  public set doc(value: Maybe<vscode.TextDocument>) {
+    this._doc = value;
+  }
+
+  public show() {
+    // We can assert document is assigned here
+    vscode.window.showTextDocument(this.doc!, {
+      viewColumn: vscode.ViewColumn.Beside,
+      preserveFocus: true,
+      preview: true,
+    });
+  }
 }

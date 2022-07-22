@@ -212,9 +212,7 @@ export class WhylsonContext {
     );
 
     // Remove entries that are already existent in file
-    const lst = this._entries.filter((ces) => {
-      ces.source !== uri.fsPath;
-    });
+    const lst = this._entries.filter((ces) => ces.source !== uri.fsPath);
 
     // safeWrite will automatically update entries
     return (await utils.safeWrite(this._contractsJsonUri!, [...lst, entry]))
@@ -310,6 +308,23 @@ export class WhylsonContext {
     }
     vscode.window.showErrorMessage(`Invalid entry for ligo contract.`);
     return undefined;
+  }
+
+  /**
+   * Attempts to find if specified uri has a visible michelson view.
+   * @param uri Uri of for ligo document whose contract is possibly displayed.
+   * @returns `true` if michelson view for specified uri is visible, `false` otherwise.
+   */
+  private isContractDisplayed(uri: vscode.Uri) {
+    // TODO : filter visible text editors
+    uri = this.ligoToMichelson(uri);
+    const found = !!vscode.window.visibleTextEditors.find(
+      (ed) =>
+        ed.document.uri.fsPath === uri.fsPath &&
+        ed.document.uri.scheme === uri.scheme
+    );
+
+    return found;
   }
 
   /**
@@ -486,8 +501,13 @@ export class WhylsonContext {
           // This command is only ran when file is ligo due to contributes when clauses
           const doc = vscode.window.activeTextEditor!.document;
 
-          // 1. Contract found? Attempt to display it
-          // 2. Not found? Attempt to create, then attempt to display it
+          // 1. Early return if contract is visible
+          if (this.isContractDisplayed(doc.uri)) {
+            return;
+          }
+
+          // 2. Contract found? Attempt to display it
+          // 3. Not found? Attempt to create, then attempt to display it
           // Only possible due to lazy evaluation
           (await this.findContractBin(doc)) ||
           (await this.firstContractCompilation(doc))
