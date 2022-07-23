@@ -298,11 +298,13 @@ export class WhylsonContext {
   ): Promise<Maybe<ContractEntryScheme>> {
     const entry = await this.createContractEntry(doc.uri);
     if (entry) {
-      const { status } = this.compileContract(entry, true);
-      if (status) {
+      // This compilation results in outputting to file, resulting in no text
+      const { t } = await this._compileContract(entry, true);
+      if (t === "Success") {
         return entry;
       }
-      vscode.window.showErrorMessage(`First contract compilation failed.`);
+
+      vscode.window.showErrorMessage(`First compilation failed : ${t}`);
       await this.removeContractEntry(doc.uri);
       return undefined;
     }
@@ -317,7 +319,7 @@ export class WhylsonContext {
    */
   private isContractDisplayed(uri: vscode.Uri) {
     // TODO : filter visible text editors
-    uri = this.ligoToMichelson(uri);
+    uri = this.ligoToMichelson(uri).with({ scheme: ViewManager.scheme });
     const found = !!vscode.window.visibleTextEditors.find(
       (ed) =>
         ed.document.uri.fsPath === uri.fsPath &&
@@ -352,14 +354,14 @@ export class WhylsonContext {
 
     const entry = this.getContractEntry(doc.uri);
     if (entry) {
-      const results = await this._compileContract(entry, false);
-      const contractText = utils.extractResults(results);
-
-      this._manager.display(
-        doc.uri,
-        this.ligoToMichelson(doc.uri),
-        contractText
+      // This compilation returns text, be it michelson code or an error
+      const { ok, text } = utils.extractResults(
+        await this._compileContract(entry, false)
       );
+
+      return ok
+        ? this._manager.display(doc.uri, this.ligoToMichelson(doc.uri), text)
+        : undefined;
     }
   };
 
@@ -434,13 +436,6 @@ export class WhylsonContext {
             this.displayContract(e.uri, undefined);
           }
         }
-      })
-    );
-
-    // Triggers when tab group is changed (opened file, closed file, moved to other group)
-    this._context.subscriptions.push(
-      vscode.window.onDidChangeVisibleTextEditors((e) => {
-        // Might not be needed for view manager logic
       })
     );
 

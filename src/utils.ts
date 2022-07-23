@@ -133,15 +133,15 @@ export namespace utils {
    * @param results Object pertaining information regarding ligo compilation.
    * @returns Data parsed from compilation results.
    */
-  // TODO : Properly implement function
   export function extractResults(results: ExecutionResult) {
+    // TODO : Is there any terser way to do this?
     switch (results.t) {
       case "Success":
-        return results.result;
+        return { ok: true, text: results.result };
       case "LigoExecutionException":
-        return commentMichelson(results.error);
+        return { ok: true, text: commentMichelson(results.error) };
       default:
-        return results.t as string;
+        return { ok: false, text: results.t };
     }
   }
 
