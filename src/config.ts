@@ -1,5 +1,4 @@
 import * as vscode from "vscode";
-import { Maybe, OnSaveActions } from "./types";
 
 /**
  * Encapsulation and ease of acess for extension configurations
@@ -21,14 +20,6 @@ export class Config {
   }
 
   /**
-   * Gets the configurations for ligo documents on save actions.
-   * @returns `OnSaveActions' type or undefined if not found.
-   */
-  public getOnSaveCreateActions(): Maybe<OnSaveActions> {
-    return this._configs.get<OnSaveActions>("onSaveActions");
-  }
-
-  /**
    * Gets the configurations for auto saving ligo documents.
    * @returns `true' if enabled, `false` otherwise.
    */
@@ -42,6 +33,14 @@ export class Config {
    */
   public getAutoSaveThreshold() {
     return this._configs.get<number>("autoSaveThreshold");
+  }
+
+  /**
+   * Gets the configurations for background compilation on save (view not visible).
+   * @returns `true' if enabled, `false` otherwise.
+   */
+  public getonSaveBackgroundCompilation() {
+    return this._configs.get<boolean>("onSaveBackgroundCompilation");
   }
 
   /**

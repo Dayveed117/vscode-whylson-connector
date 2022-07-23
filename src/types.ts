@@ -68,18 +68,3 @@ export interface ContractEntryScheme extends CompileContractOptions {
    */
   onPath: string;
 }
-
-/**
- * Type of configurations under `whylson-connector.onSaveActions`.
- */
-export type OnSaveActions = {
-  /**
-   * Controls wheather or not to attempt the creation of an entry into contracts.json.
-   */
-  createEntry: boolean;
-
-  /**
-   * Controls wheather or not to open michelson view if closed.
-   */
-  openView: boolean;
-};

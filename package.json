@@ -44,26 +44,11 @@
           "description": "Throttled time interval for auto saving.",
           "scope": "window"
         },
-        "whylson-connector.onSaveActions": {
-          "type": "object",
-          "order": 2,
-          "description": "Controls actions performed on saving ligo documents.",
-          "properties": {
-            "createEntry": {
-              "type": "boolean",
-              "description": "Create entry in contracts.json."
-            },
-            "openView": {
-              "type": "boolean",
-              "description": "Open michelson view if closed."
-            }
-          },
-          "additionalProperties": false,
-          "scope": "window",
-          "default": {
-            "createEntry": false,
-            "openView": false
-          }
+        "whylson-connector.onSaveBackgroundCompilation": {
+          "type": "boolean",
+          "default": true,
+          "description": "Attempts to compile ligo document even if view is not visible.",
+          "scope": "window"
         },
         "whylson-connector.highlightAnnotations": {
           "type": "boolean",

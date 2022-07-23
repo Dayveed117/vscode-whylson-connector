@@ -347,7 +347,7 @@ export class WhylsonContext {
    * @param doc `vscode.TextDocument` Active ligo document.
    */
   // * Requires arrow function to retain the "this" context in debounced function
-  private throttledSaveAndCompile = async (doc: vscode.TextDocument) => {
+  private throttledOnChangeActions = async (doc: vscode.TextDocument) => {
     if (!(await doc.save())) {
       return;
     }
@@ -355,9 +355,8 @@ export class WhylsonContext {
     const entry = this.getContractEntry(doc.uri);
     if (entry) {
       // This compilation returns text, be it michelson code or an error
-      const { ok, text } = utils.extractResults(
-        await this._compileContract(entry, false)
-      );
+      const results = await this._compileContract(entry, false);
+      const { ok, text } = utils.extractResults(results);
 
       return ok
         ? this._manager.display(doc.uri, this.ligoToMichelson(doc.uri), text)
@@ -382,58 +381,57 @@ export class WhylsonContext {
    */
   private registerEvents() {
     // Triggers every when any change to a document in the tabs' group is made
-    const throttledDisplay = debounce(this.throttledSaveAndCompile, 750, {
+    // TODO : Modify to use threshold config as interval instead of 750
+    const throttledDisplay = debounce(this.throttledOnChangeActions, 750, {
       isImmediate: false,
     });
     this._context.subscriptions.push(
       vscode.workspace.onDidChangeTextDocument(async (e) => {
-        // Only perform onChange operations when in ligo document
-        // with michelson view open
-        // TODO : adjust logic for instance
-        // if (
-        //   utils.isLigoFileDetected(e.document) &&
-        //   this._config.getDocumentAutoSave() &&
-        //   this._view.isOpen
-        // ) {
-        //   throttledDisplay(e.document);
-        // }
+        // 1. Proceed if ligo document
+        // 2. Proceed if auto save config is turned on
+        // 3. Proceed if michelson view for active ligo document is visible
+        if (
+          utils.isLigoFileDetected(e.document) &&
+          this._config.getDocumentAutoSave() &&
+          this.isContractDisplayed(e.document.uri)
+        ) {
+          throttledDisplay(e.document);
+        }
       })
     );
 
     // Triggers everytime a document is saved
     this._context.subscriptions.push(
       vscode.workspace.onDidSaveTextDocument(async (e) => {
-        // 1. Ignore if not ligo document
-        // 2. Having autosave turned on returns
-        // 3. Having MichelsonView of active ligo contract open returns
-
-        // if (
-        //   !utils.isLigoFileDetected(e) ||
-        //   (this._config.getDocumentAutoSave() && this._view.isOpen)
-        // ) {
-        //   return;
-        // }
-
-        // From this point on
-        // 1. Active document is definitely a ligo document
-        // 2. Autosave is turned off and if there is MichelsonView is not of active ligo document
-
-        // Attempt to fetch contract entry for active ligo document
-        // If non existent, attempt to create entry, depending on createEntry configuration
-        let entry = this.getContractEntry(e.uri);
-        if (!entry && this._config.getOnSaveCreateActions()?.createEntry) {
-          entry = await this.createContractEntry(e.uri);
+        // 1. Ignore if not ligo document OR
+        // 2.1. Ignore if autosave configuration is on AND
+        // 2.2. Ignore if view of active ligo contract is visible
+        if (
+          !utils.isLigoFileDetected(e) ||
+          (this._config.getDocumentAutoSave() &&
+            this.isContractDisplayed(e.uri))
+        ) {
+          return;
         }
 
-        // If a valid entry is found or created, compile contract and display it
-        // Only display if compilation successful and if extension configuration allows
-        if (entry) {
-          const { status } = this.compileContract(entry, true);
-          this._log.info(
-            `${status ? "Successful" : "Failed"} compilation of ${e.uri.fsPath}`
-          );
-          if (status && this._config.getOnSaveCreateActions()?.openView) {
-            this.displayContract(e.uri, undefined);
+        // TODO : Process seems convoluted from here on
+        // 3. Proceed only if there is an entry
+        const entry = this.getContractEntry(e.uri);
+        if (entry && this._config.getonSaveBackgroundCompilation()) {
+          const results = await this._compileContract(entry, false);
+          const { ok, text } = utils.extractResults(results);
+
+          // 4. Compile to modify michelson file on disk
+          if (results.t === "Success") {
+            this._compileContract(entry, true);
+            this._log.info(`BG Compilation successful for ${e.uri.fsPath}`);
+          } else {
+            this._log.info(`BG Compilation failed for ${e.uri.fsPath}`);
+          }
+
+          // 5. Only display if view is visible, can display both code and error
+          if (ok && this.isContractDisplayed(e.uri)) {
+            this.displayContract(e.uri, text);
           }
         }
       })
