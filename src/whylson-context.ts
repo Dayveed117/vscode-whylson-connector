@@ -235,9 +235,7 @@ export class WhylsonContext {
    * @returns `true` if removal is successful, `false` otherwise.
    */
   private async removeContractEntry(uri: vscode.Uri): Promise<boolean> {
-    const lst = this._entries.filter((ces) => {
-      ces.source !== uri.fsPath;
-    });
+    const lst = this._entries.filter((ces) => ces.source !== uri.fsPath);
 
     // Modifying contracts.json will trigger onDidChange, updating entries automatically
     return await utils.safeWrite(this._contractsJsonUri!, lst);
@@ -414,10 +412,10 @@ export class WhylsonContext {
           return;
         }
 
-        // TODO : Process seems convoluted from here on
-        // 3. Proceed only if there is an entry
+        // 3.1. Proceed only if there is contract entry
+        // 3.2. Autosave is off, saving attempts to compile contract
         const entry = this.getContractEntry(e.uri);
-        if (entry && this._config.getonSaveBackgroundCompilation()) {
+        if (entry && this._config.getOnSaveBackgroundCompilation()) {
           const results = await this._compileContract(entry, false);
           const { ok, text } = utils.extractResults(results);
 

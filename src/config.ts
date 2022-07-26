@@ -39,7 +39,7 @@ export class Config {
    * Gets the configurations for background compilation on save (view not visible).
    * @returns `true' if enabled, `false` otherwise.
    */
-  public getonSaveBackgroundCompilation() {
+  public getOnSaveBackgroundCompilation() {
     return this._configs.get<boolean>("onSaveBackgroundCompilation");
   }
 
