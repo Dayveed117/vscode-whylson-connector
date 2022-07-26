@@ -71,6 +71,12 @@
         "title": "Check Ligo"
       },
       {
+        "command": "whylson-connector.save-ligo-compilation",
+        "enablement": "resourceLangId =~ /^(m|js|re)?ligo$/",
+        "category": "Whylson",
+        "title": "Save Contract"
+      },
+      {
         "command": "whylson-connector.start-session",
         "enablement": "resourceLangId =~ /^(m|js|re)?ligo$/",
         "category": "Whylson",
@@ -87,7 +93,7 @@
         "command": "whylson-connector.erase-contract-info",
         "enablement": "resourceLangId =~ /^(m|js|re)?ligo$/",
         "category": "Whylson",
-        "title": "Erase Document Data"
+        "title": "Erase Contract Data"
       },
       {
         "command": "whylson-connector.remake-dot-whylson",

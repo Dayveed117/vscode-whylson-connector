@@ -13,4 +13,7 @@ export function activate(context: vscode.ExtensionContext) {
 }
 
 // Method called when extension is deactivated
-export function deactivate() {}
+export async function deactivate() {
+  // TODO : How does deactivate method really work?
+  WhylsonContext.removeViews();
+}

@@ -1,4 +1,4 @@
-import path, { posix } from "path";
+import { posix } from "path";
 import { debounce } from "ts-debounce";
 import * as vscode from "vscode";
 import { Config } from "./config";
@@ -412,6 +412,8 @@ export class WhylsonContext {
           return;
         }
 
+        // TODO : Separate background compilation from compilation to michelson view
+
         // 3.1. Proceed only if there is contract entry
         // 3.2. Autosave is off, saving attempts to compile contract
         const entry = this.getContractEntry(e.uri);
@@ -538,6 +540,26 @@ export class WhylsonContext {
       )
     );
 
+    // Manually save compilation to specified outpath in entry
+    this._context.subscriptions.push(
+      vscode.commands.registerCommand(
+        "whylson-connector.save-ligo-compilation",
+        async () => {
+          const uri = vscode.window.activeTextEditor!.document.uri;
+
+          const entry = this.getContractEntry(uri);
+          if (entry) {
+            let { t } = await this._compileContract(entry, true);
+            if (t === "Success") {
+              this._log.info(`Compilation successful for ${uri.fsPath}`);
+            } else {
+              this._log.info(`Compilation failed for ${uri.fsPath}`);
+            }
+          }
+        }
+      )
+    );
+
     // * Future Whylson start session
     this._context.subscriptions.push(
       vscode.commands.registerCommand("whylson-connector.start-session", () => {
@@ -556,5 +578,21 @@ export class WhylsonContext {
         this._manager
       )
     );
+  }
+
+  /**
+   * Remove all existing michelson views in vscode instance.
+   */
+  static removeViews() {
+    vscode.workspace.textDocuments
+      .filter((doc) => doc.uri.scheme === ViewManager.scheme && !doc.isClosed)
+      .forEach(async (view) => {
+        await vscode.window.showTextDocument(view, {
+          viewColumn: vscode.ViewColumn.Beside,
+          preserveFocus: true,
+          preview: true,
+        });
+        vscode.commands.executeCommand("workbench.action.closeActiveEditor");
+      });
   }
 }
