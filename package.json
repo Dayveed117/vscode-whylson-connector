@@ -67,6 +67,7 @@
     "commands": [
       {
         "command": "whylson-connector.check-ligo",
+        "enablement": "isExtensionProduction == false",
         "category": "Whylson",
         "title": "Check Ligo"
       },

@@ -476,15 +476,24 @@ export class WhylsonContext {
    * Only some commands are available in the contributions menu.
    */
   private registerCommands() {
-    // Tester command
-    this._context.subscriptions.push(
-      vscode.commands.registerCommand(
-        "whylson-connector.check-ligo",
-        async () => {
-          // vscode.window.showErrorMessage("Not implemented yet.");
-        }
-      )
+    // Used in package.json to check extension mode
+    vscode.commands.executeCommand(
+      "setContext",
+      "isExtensionProduction",
+      this._context.extensionMode !== vscode.ExtensionMode.Production
     );
+
+    if (this._context.extensionMode !== vscode.ExtensionMode.Production) {
+      // Tester command
+      this._context.subscriptions.push(
+        vscode.commands.registerCommand(
+          "whylson-connector.check-ligo",
+          async () => {
+            // vscode.window.showErrorMessage("Not implemented yet.");
+          }
+        )
+      );
+    }
 
     // Open the michelson view for current ligo document
     this._context.subscriptions.push(
@@ -578,21 +587,5 @@ export class WhylsonContext {
         this._manager
       )
     );
-  }
-
-  /**
-   * Remove all existing michelson views in vscode instance.
-   */
-  static removeViews() {
-    vscode.workspace.textDocuments
-      .filter((doc) => doc.uri.scheme === ViewManager.scheme && !doc.isClosed)
-      .forEach(async (view) => {
-        await vscode.window.showTextDocument(view, {
-          viewColumn: vscode.ViewColumn.Beside,
-          preserveFocus: true,
-          preview: true,
-        });
-        vscode.commands.executeCommand("workbench.action.closeActiveEditor");
-      });
   }
 }
