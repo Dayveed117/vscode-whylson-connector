@@ -66,12 +66,6 @@
     },
     "commands": [
       {
-        "command": "whylson-connector.check-ligo",
-        "enablement": "isExtensionProduction == false",
-        "category": "Whylson",
-        "title": "Check Ligo"
-      },
-      {
         "command": "whylson-connector.save-ligo-compilation",
         "enablement": "resourceLangId =~ /^(m|js|re)?ligo$/",
         "category": "Whylson",

@@ -2,49 +2,49 @@
   "whylson-equality": {
     "prefix": "whylson-eq",
     "body": [
-      "[@comment: \"${1|int,nat,mutez,string,address|} = ${0:value}\" ?]"
+      "[@comment: \"${1|int,nat,mutez,string,address|} = ${0:value}\"]"
     ],
     "description": "Ligo attribute for equality annotation for next \"let\" expression"
   },
   "whylson-inequality": {
     "prefix": "whylson-ineq",
     "body": [
-      "[@comment: \"${1|int,nat,mutez,string,address|} <> ${0:value}\" ?]"
+      "[@comment: \"${1|int,nat,mutez,string,address|} <> ${0:value}\"]"
     ],
     "description": "Ligo attribute for inequality annotation for next \"let\" expression"
   },
   "whylson-greater-than": {
     "prefix": "whylson-gt",
     "body": [
-      "[@comment: \"${1|int,nat,mutez|} > ${0:value}\" ?]"
+      "[@comment: \"${1|int,nat,mutez|} > ${0:value}\"]"
     ],
     "description": "Ligo attribute for \"greater than\" annotation for next \"let\" expression"
   },
   "whylson-greater-equals": {
     "prefix": "whylson-ge",
     "body": [
-      "[@comment: \"${1|int,nat,mutez|} >= ${0:value}\" ?]"
+      "[@comment: \"${1|int,nat,mutez|} >= ${0:value}\"]"
     ],
     "description": "Ligo attribute for \"greater equals\" annotation for next \"let\" expression"
   },
   "whylson-lesser-than": {
     "prefix": "whylson-lt",
     "body": [
-      "[@comment: \"${1|int,nat,mutez|} < ${0:value}\" ?]"
+      "[@comment: \"${1|int,nat,mutez|} < ${0:value}\"]"
     ],
     "description": "Ligo attribute for \"lesser than\" annotation for next \"let\" expression"
   },
   "whylson-lesser-equals": {
     "prefix": "whylson-le",
     "body": [
-      "[@comment: \"${1|int,nat,mutez|} <= ${0:value}\" ?]"
+      "[@comment: \"${1|int,nat,mutez|} <= ${0:value}\"]"
     ],
     "description": "Ligo attribute for \"lesser Equals\" annotation for next \"let\" expression"
   },
   "whylson-bound": {
     "prefix": "whylson-bound",
     "body": [
-      "[@comment: \"${2:low} ${3|<=,<|} ${1|int,nat,mutez|} ${5|<=,<|} ${4:high}\" ?]"
+      "[@comment: \"${2:low} ${3|<=,<|} ${1|int,nat,mutez|} ${5|<=,<|} ${4:high}\"]"
     ],
     "description": "Ligo attribute for \"within bounds\" annotation for next \"let\" expression"
   }

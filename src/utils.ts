@@ -134,7 +134,7 @@ export namespace utils {
    * @returns Data parsed from compilation results.
    */
   export function extractResults(results: ExecutionResult) {
-    // TODO : Is there any terser way to do this?
+    // ? Is there any terser way to do this?
     switch (results.t) {
       case "Success":
         return { ok: true, text: results.result };
