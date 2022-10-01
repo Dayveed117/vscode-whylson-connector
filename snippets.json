@@ -47,5 +47,33 @@
       "[@comment: \"${2:low} ${3|<=,<|} ${1|int,nat,mutez|} ${5|<=,<|} ${4:high}\"]"
     ],
     "description": "Ligo attribute for \"within bounds\" annotation for next \"let\" expression"
+  },
+  "whylson-variant": {
+    "prefix": "whylson-variant",
+    "body": [
+      "[@comment: \"variant{$1}\"]"
+    ],
+    "description": "Ligo attribute for WhylSons variant specification"
+  },
+  "whylson-invariant": {
+    "prefix": "whylson-invariant",
+    "body": [
+      "[@comment: \"invariant{$1}\"]"
+    ],
+    "description": "Ligo attribute for WhylSons invariant specification"
+  },
+  "whylson-requires": {
+    "prefix": "whylson-requires",
+    "body": [
+      "[@comment: \"requires{$1}\"]"
+    ],
+    "description": "Ligo attribute for WhylSons pre-condition specification"
+  },
+  "whylson-ensures": {
+    "prefix": "whylson-ensures",
+    "body": [
+      "[@comment: \"ensures{$1}\"]"
+    ],
+    "description": "Ligo attribute for WhylSons post-condition specification"
   }
 }

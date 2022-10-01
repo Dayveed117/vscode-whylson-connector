@@ -3,4 +3,5 @@ dist/
 node_modules/
 .vscode-test/
 *.vsix
-vsc-extension-quickstart
+vsc-extension-quickstart.md
+package-lock.json
