@@ -7,6 +7,7 @@ This is the README for Whylson-Connector, a VSCode extension enabling formal ver
 + On-the-fly compilation of LIGO files through customizable settings in contracts.json;
 + Dual-View of LIGO and Michelson files, changes on LIGO files can be reflected in this panel, as well as LIGO compiler errors when compilation is not successful.
 + Snippets for WhylSon specifications in LIGO files;
++ Formal verification of Michelson smart contracts through WhylSon.
 
 ## Requirements
 
@@ -19,11 +20,11 @@ For the full experience of this extension, the following is required:
 
 ## Extension Commands
 
-This extension adds the following commands to the context :
+This extension adds the following commands to the context:
 
 + `Save Contract` : Attempts to make an entry for the current LIGO contract in `.whylson/contracts.json`. Making an entry requires a successful compilation of the LIGO document;
 + `Start Whylson Session` : Starts a new process in which Whylson runs a session with the Michelson file, found within `.whylson/contracts/`, of the active LIGO file on screen;
-+ `Open Michelson View` : Opens Michelson file of respective LIGO document. If contract is not found within `.whylson/contracts/`, attempts to create a new entry for it, opening the view if successful;
++ `Open Michelson View` : Opens Michelson file of respective LIGO document. If contract is not found within `.whylson/contracts/`, attempts to create a new entry for it, opening the view if successful. This command is also available through an icon on the editor title UI;
 + `Erase Contract Data` : Erases the contract data for the active LIGO document in `.whylson/contracts/` and `.whylson/contracts.json`;
 + `Remake .whylson Folder` : Erases all contents of `.whylson/` folder.
 
