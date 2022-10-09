@@ -1,71 +1,45 @@
-# whylson-connector README
+# Whylson-Connector README
 
-This is the README for your extension "whylson-connector". After writing up a brief description, we recommend including the following sections.
+This is the README for Whylson-Connector, a VSCode extension enabling formal verification of LIGO smart contracts through the use of Whylson tool, based on Why3.
 
 ## Features
 
-Describe specific features of your extension including screenshots of your extension in action. Image paths are relative to this README file.
-
-For example if there is an image subfolder under your extension project workspace:
-
-\!\[feature X\]\(images/feature-x.png\)
-
-> Tip: Many popular extensions utilize animations. This is an excellent way to show off your extension! We recommend short, focused animations that are easy to follow.
++ On-the-fly compilation of LIGO files through customizable settings in contracts.json;
++ Dual-View of LIGO and Michelson files, changes on LIGO files can be reflected in this panel, as well as LIGO compiler errors when compilation is not successful.
++ Snippets for WhylSon specifications in LIGO files;
++ Formal verification of Michelson smart contracts through WhylSon.
 
 ## Requirements
 
-If you have any requirements or dependencies, add a section describing those and how to install and configure them.
+For the full experience of this extension, the following is required:
 
-## Extension Settings
++ VSCode instance being in a workspace environment;
++ LIGO compiler present in the system's PATH;
++ An installation of WhylSon at the root of the LIGO project;
++ ligo-vscode extension installed between versions 0.4.16-0.4.18.
 
-Include if your extension adds any VS Code settings through the `contributes.configuration` extension point.
+## Extension Commands
 
-For example:
+This extension adds the following commands to the context:
 
-This extension contributes the following settings:
++ `Save Contract` : Attempts to make an entry for the current LIGO contract in `.whylson/contracts.json`. Making an entry requires a successful compilation of the LIGO document;
++ `Start Whylson Session` : Starts a new process in which Whylson runs a session with the Michelson file, found within `.whylson/contracts/`, of the active LIGO file on screen;
++ `Open Michelson View` : Opens Michelson file of respective LIGO document. If contract is not found within `.whylson/contracts/`, attempts to create a new entry for it, opening the view if successful. This command is also available through an icon on the editor title UI;
++ `Erase Contract Data` : Erases the contract data for the active LIGO document in `.whylson/contracts/` and `.whylson/contracts.json`;
++ `Remake .whylson Folder` : Erases all contents of `.whylson/` folder.
 
-* `myExtension.enable`: enable/disable this extension
-* `myExtension.thing`: set to `blah` to do something
+## Extension Configuration
+
++ `whylson-connector.autoSave` : Toggle autosave feature. If on, **and Michelson view of respective LIGO file is visible**, the latter is automatically saved after the specified time interval in `autoSaveThreshold`, triggering compilation;
++ `whylson-connector.autoSaveThreshold` : Throttled time interval for auto saving;
++ `whylson-connector.onSaveBackgroundCompilation` : Attempts to compile LIGO document even if view is not visible;
++ `whylson-connector.highlightAnnotations` : Highlight whylson annotated lines in LIGO documents;
++ `whylson-connector.showOutputMessages` : Have extension occasionally send messages on Whylson-Connector output channel.
 
 ## Known Issues
 
-Calling out known issues can help limit users opening duplicate issues against your extension.
++ `whylson-connector.showOutputMessages` and `whylson-connector.highlightAnnotations` configurations are undergoing development, not taking any effect on the extension yet;
++ LIGO comment attribute still under development, being unable for annotations to be carried over to Michelson;
++ Whylson's is undergoing development, and is unable to be launched at this moment in time.
 
-## Release Notes
-
-Users appreciate release notes as you update your extension.
-
-### 1.0.0
-
-Initial release of ...
-
-### 1.0.1
-
-Fixed issue #.
-
-### 1.1.0
-
-Added features X, Y, and Z.
-
------------------------------------------------------------------------------------------------------------
-
-## Following extension guidelines
-
-Ensure that you've read through the extensions guidelines and follow the best practices for creating your extension.
-
-* [Extension Guidelines](https://code.visualstudio.com/api/references/extension-guidelines)
-
-## Working with Markdown
-
-**Note:** You can author your README using Visual Studio Code.  Here are some useful editor keyboard shortcuts:
-
-* Split the editor (`Cmd+\` on macOS or `Ctrl+\` on Windows and Linux)
-* Toggle preview (`Shift+CMD+V` on macOS or `Shift+Ctrl+V` on Windows and Linux)
-* Press `Ctrl+Space` (Windows, Linux) or `Cmd+Space` (macOS) to see a list of Markdown snippets
-
-### For more information
-
-* [Visual Studio Code's Markdown Support](http://code.visualstudio.com/docs/languages/markdown)
-* [Markdown Syntax Reference](https://help.github.com/articles/markdown-basics/)
-
-**Enjoy!**
+---

@@ -7,7 +7,9 @@
     "vscode": "^1.67.0"
   },
   "categories": [
-    "Other"
+    "Snippets",
+    "Testing",
+    "Visualization"
   ],
   "activationEvents": [
     "onLanguage:ligo",
@@ -65,11 +67,6 @@
       }
     },
     "commands": [
-      {
-        "command": "whylson-connector.check-ligo",
-        "category": "Whylson",
-        "title": "Check Ligo"
-      },
       {
         "command": "whylson-connector.save-ligo-compilation",
         "enablement": "resourceLangId =~ /^(m|js|re)?ligo$/",

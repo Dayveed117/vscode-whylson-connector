@@ -129,7 +129,6 @@ export class WhylsonContext {
    * of the extension.
    * If verifications fail, all context disposables will be disposed.
    */
-  // TODO : Think better about procedures on first checkup
   private checkups() {
     const a = utils.isLigoExtensionActive();
     const b = utils.verifyLigoBinaries();
@@ -316,7 +315,7 @@ export class WhylsonContext {
    * @returns `true` if michelson view for specified uri is visible, `false` otherwise.
    */
   private isContractDisplayed(uri: vscode.Uri) {
-    // TODO : filter visible text editors
+    // ? filter visible text editors
     uri = this.ligoToMichelson(uri).with({ scheme: ViewManager.scheme });
     const found = !!vscode.window.visibleTextEditors.find(
       (ed) =>
@@ -379,7 +378,7 @@ export class WhylsonContext {
    */
   private registerEvents() {
     // Triggers every when any change to a document in the tabs' group is made
-    // TODO : Modify to use threshold config as interval instead of 750
+    // ? Modify to use threshold config as interval instead of 750 ms
     const throttledDisplay = debounce(this.throttledOnChangeActions, 750, {
       isImmediate: false,
     });
@@ -412,7 +411,7 @@ export class WhylsonContext {
           return;
         }
 
-        // TODO : Separate background compilation from compilation to michelson view
+        // ? Separate background compilation from compilation to michelson view
 
         // 3.1. Proceed only if there is contract entry
         // 3.2. Autosave is off, saving attempts to compile contract
@@ -476,16 +475,6 @@ export class WhylsonContext {
    * Only some commands are available in the contributions menu.
    */
   private registerCommands() {
-    // Tester command
-    this._context.subscriptions.push(
-      vscode.commands.registerCommand(
-        "whylson-connector.check-ligo",
-        async () => {
-          // vscode.window.showErrorMessage("Not implemented yet.");
-        }
-      )
-    );
-
     // Open the michelson view for current ligo document
     this._context.subscriptions.push(
       vscode.commands.registerCommand(
@@ -528,14 +517,9 @@ export class WhylsonContext {
         async () => {
           const uri = vscode.window.activeTextEditor!.document.uri;
 
-          // Remove entry from both memory and file
-          if (await this.removeContractEntry(uri)) {
-            this._log.info("Entry removed successfully.");
-          }
-
-          if (await utils.safeDelete(this.ligoToMichelson(uri), undefined)) {
-            this._log.info("Michelson contract removed successfully.");
-          }
+          // Remove entry from both memory and contracts.json
+          await this.removeContractEntry(uri);
+          await utils.safeDelete(this.ligoToMichelson(uri), undefined);
         }
       )
     );
@@ -578,21 +562,5 @@ export class WhylsonContext {
         this._manager
       )
     );
-  }
-
-  /**
-   * Remove all existing michelson views in vscode instance.
-   */
-  static removeViews() {
-    vscode.workspace.textDocuments
-      .filter((doc) => doc.uri.scheme === ViewManager.scheme && !doc.isClosed)
-      .forEach(async (view) => {
-        await vscode.window.showTextDocument(view, {
-          viewColumn: vscode.ViewColumn.Beside,
-          preserveFocus: true,
-          preview: true,
-        });
-        vscode.commands.executeCommand("workbench.action.closeActiveEditor");
-      });
   }
 }
