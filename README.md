@@ -13,14 +13,14 @@ This is the README for Whylson-Connector, a VS Code extension enabling formal ve
 
 ## Requirements
 
-To enable the extension's full capabilities, the following is required:
+**To enable the extension's full capabilities**, the following is required:
 
 + VS Code instance being in a workspace environment;
 + LIGO compiler present in the system's PATH;
 + An installation of WhylSon at the root of the LIGO project;
 + **ligo-vscode extension installed between versions 0.4.16-0.4.18**.
 
-## Instalation & Usage (Pre-Release, Pre-Publish)
+## Installation & Usage (Pre-Release, Pre-Publish)
 
 + **Download project** into local machine;
 + Run `npm install` in terminal to install dependencies;
