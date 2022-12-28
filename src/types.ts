@@ -44,6 +44,7 @@ export interface CompileContractOutput {
 /**
  * Object type returned after compile ligo command from ligo-vscode extension.
  */
+// TODO : Not required after vscode-ligo dependency is removed
 export type ExecutionResult =
   | { t: "Success"; result: string }
   | { t: "NoLigoPath" }

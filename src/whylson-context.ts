@@ -82,7 +82,7 @@ export class WhylsonContext {
   /**
    * Dispose all of the disposable resources.
    */
-  private deactivate() {
+  public deactivate() {
     this._context.subscriptions.forEach((disposable) => {
       disposable.dispose();
     });
@@ -547,7 +547,11 @@ export class WhylsonContext {
     // * Future Whylson start session
     this._context.subscriptions.push(
       vscode.commands.registerCommand("whylson-connector.start-session", () => {
-        vscode.window.showErrorMessage("Not implemented yet.");
+        // vscode.window.showErrorMessage("Not implemented yet.");
+        let res = utils.newCompileLigo();
+        if (res) {
+          this._log.debug(res, true);
+        }
       })
     );
   }

@@ -1,4 +1,4 @@
-import { execSync, Serializable } from "child_process";
+import { exec, execFileSync, execSync, Serializable } from "child_process";
 import { posix } from "path";
 import { TextDecoder, TextEncoder } from "util";
 import * as vscode from "vscode";
@@ -75,6 +75,32 @@ export namespace utils {
   }
 
   /**
+   * Compilation with execFileSync function.
+   * @param source File path to active ligo document.
+   * @param cco Set of compilation options for a ligo contract.
+   * @returns Resulting string of sucess or failed compilation.
+   */
+  // TODO : Make compilation function return result as string for both successful and unsuccessful compilation
+  export function newCompileLigo() {
+    let command = [
+      "compile",
+      "contract",
+      "/home/alexa/playground/remotes/Ligo-contracts/src/test1.mligo",
+    ];
+    try {
+      let b = execFileSync("which", ["ligo"]).toString();
+      let a = execFileSync("ligo", command).toString();
+      console.log(a, b);
+    } catch (error) {
+      if (error instanceof Error) {
+        // ! If type is narrowed to Error, then it is possible to return stderr message
+        // ! and use it as a string to show in michelson view
+        return error.message;
+      }
+    }
+  }
+
+  /**
    * Compiles the active ligo document using a set of options.
    * @param source File path to active ligo document.
    * @param cco Set of compilation options for a ligo contract.
@@ -106,6 +132,7 @@ export namespace utils {
    * @param cco Set of compilation options for a ligo contract.
    * @returns Set of contract compilation results as `ExecutionResult` or a promise to one.
    */
+  // TODO : Not required after vscode-ligo dependency is removed
   export async function _compileLigo(
     cco: CompileContractOptions
   ): Promise<ExecutionResult> {
@@ -120,7 +147,7 @@ export namespace utils {
    * @param content Text as a string.
    * @returns The same text with each line preppended with `"# "`.
    */
-  function commentMichelson(content: string) {
+  function commentMichelson(content: string): string {
     const lines = content.split("\n");
     let arr = lines.map((line) => {
       return `# ${line}\n`;
@@ -133,6 +160,7 @@ export namespace utils {
    * @param results Object pertaining information regarding ligo compilation.
    * @returns Data parsed from compilation results.
    */
+  // TODO : Not required after vscode-ligo dependency is removed
   export function extractResults(results: ExecutionResult) {
     // ? Is there any terser way to do this?
     switch (results.t) {
@@ -166,9 +194,9 @@ export namespace utils {
    */
   export async function safeRead(uri: vscode.Uri): Promise<string> {
     try {
-      let encoded = await vscode.workspace.fs.readFile(uri);
-      let decoded = new TextDecoder("utf-8").decode(encoded);
-      return decoded;
+      return new TextDecoder("utf-8").decode(
+        await vscode.workspace.fs.readFile(uri)
+      );
     } catch {
       return "";
     }
