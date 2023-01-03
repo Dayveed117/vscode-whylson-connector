@@ -17,9 +17,6 @@
     "onLanguage:jsligo",
     "onLanguage:religo"
   ],
-  "extensionDependencies": [
-    "ligolang-publish.ligo-vscode"
-  ],
   "main": "./out/extension.js",
   "contributes": {
     "configuration": {
