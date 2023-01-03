@@ -2,7 +2,7 @@
 
 This is the README for Whylson-Connector, a VS Code extension enabling formal verification of LIGO smart contracts through the use of WhylSon ([repository](https://gitlab.com/releaselab/fresco/whylson), [academic paper](https://arxiv.org/abs/2005.14650)), a deductive program verification tool based on Why3.
 
-![usage gif](/resources/features1.gif)
+![usage gif](https://github.com/Dayveed117/vscode-whylson-connector/blob/master/resources/features1.gif)
 
 ## Features
 
