@@ -29,10 +29,11 @@ export class Config {
 
   /**
    * Gets the configurations for auto saving ligo documents.
-   * @returns `true' if enabled, `false` otherwise.
+   * @returns The threshold as a `number' if defined, `undefined` otherwise.
    */
-  public getAutoSaveThreshold() {
-    return this._configs.get<number>("autoSaveThreshold");
+  public getAutoSaveThreshold(): number {
+    // ? Might be risky, but in this case, [get] always returns a number
+    return this._configs.get<number>("autoSaveThreshold")!;
   }
 
   /**

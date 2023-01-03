@@ -3,8 +3,8 @@ import { debounce } from "ts-debounce";
 import * as vscode from "vscode";
 import { Config } from "./config";
 import { Logger } from "./logger";
-import { ContractEntryScheme, CompilationResult, Maybe } from "./types";
-import { io, verifiers, utils } from "./utils";
+import { CompilationResult, ContractEntryScheme, Maybe } from "./types";
+import { io, utils, verifiers } from "./utils";
 import { ViewManager } from "./view-manager";
 
 /**
@@ -336,6 +336,12 @@ export class WhylsonContext {
     }
   };
 
+  // Triggers every when any change to a document in the tabs' group is made
+  // ? Modify to use threshold config as interval instead of 750 ms
+  private throttledDisplay = debounce(this.throttledOnChangeActions, 750, {
+    isImmediate: false,
+  });
+
   // --------------------------------------------------------------------------
   // --------------------------------------------------------------------------
   // --------------------------------------------------------------------------
@@ -352,11 +358,6 @@ export class WhylsonContext {
    * Registers events that concern whylson context.
    */
   private registerEvents() {
-    // Triggers every when any change to a document in the tabs' group is made
-    // ? Modify to use threshold config as interval instead of 750 ms
-    const throttledDisplay = debounce(this.throttledOnChangeActions, 750, {
-      isImmediate: false,
-    });
     this._context.subscriptions.push(
       vscode.workspace.onDidChangeTextDocument(async (e) => {
         // 1. Proceed if ligo document
@@ -367,7 +368,7 @@ export class WhylsonContext {
           this._config.getDocumentAutoSave() &&
           this.isContractDisplayed(e.document.uri)
         ) {
-          throttledDisplay(e.document);
+          this.throttledDisplay(e.document);
         }
       })
     );
@@ -490,14 +491,15 @@ export class WhylsonContext {
           const uri = vscode.window.activeTextEditor!.document.uri;
 
           const entry = this.getContractEntry(uri);
-          if (entry) {
-            let { ok, content } = this.compileContract(entry, true);
-            if (ok) {
-              this._log.info(`Compilation successful for ${uri.fsPath}`);
-            } else {
-              this._log.info(`${content}`, true);
-            }
+
+          if (!entry) {
+            return;
           }
+
+          const { ok, content } = this.compileContract(entry, true);
+          return ok
+            ? this._log.info(`Compilation successful for ${uri.fsPath}`)
+            : this._log.info(`${content}`, true);
         }
       )
     );
