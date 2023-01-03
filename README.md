@@ -18,13 +18,11 @@ This is the README for Whylson-Connector, a VS Code extension enabling formal ve
 + VS Code instance being in a workspace environment;
 + LIGO compiler present in the system's PATH;
 + An installation of WhylSon at the root of the LIGO project;
-+ **ligo-vscode extension installed between versions 0.4.16-0.4.18**.
 
 ## Installation & Usage (Pre-Release, Pre-Publish)
 
 + **Download project** into local machine;
 + Run `npm install` in terminal to install dependencies;
-+ Install `ligo-vscode` extension, **downgrade its version into 0.4.16~0.4.18**;
 + Run the `Launch Extension` target in the Debug View. This will:
 	+ Start a task `npm: watch` to compile the code;
 	+ Run the extension in a new VS Code window.
@@ -52,7 +50,7 @@ This extension adds the following commands to the context:
 
 ## Known Issues
 
-+ `whylson-connector.showOutputMessages` and `whylson-connector.highlightAnnotations` configurations are undergoing development, not taking any effect on the extension yet;
++ `whylson-connector.showOutputMessages`, `whylson-connector.autoSaveThreshold` and `whylson-connector.highlightAnnotations` configurations are undergoing development, not taking any effect on the extension yet;
 + LIGO comment attribute still under development, being unable for annotations to be carried over to Michelson;
 + WhylSon is undergoing development, and is unable to be launched at this moment in time.
 

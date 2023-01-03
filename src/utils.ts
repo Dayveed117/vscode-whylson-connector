@@ -4,147 +4,12 @@ import { TextDecoder, TextEncoder } from "util";
 import * as vscode from "vscode";
 import {
   CompileContractOptions,
-  CompileContractOutput,
   ContractEntryScheme,
-  ExecutionResult,
+  CompilationResult,
   Maybe,
 } from "./types";
 
-export namespace utils {
-  /**
-   * Verifies if ligo executable is found within the sytem.
-   * @returns `true` if ligo executable is found, `false` otherwise.
-   */
-  export function verifyLigoBinaries(): boolean {
-    try {
-      execSync("which ligo", { encoding: "utf-8" });
-      return true;
-    } catch (error) {
-      return false;
-    }
-  }
-
-  /**
-   * Verifies if Whylson program is found within the sytem.
-   * @returns `true` if Whylson is found, `false` otherwise.
-   */
-  export function verifyWhylsonBinaries(): boolean {
-    throw new Error("Method not implemented.");
-  }
-
-  /**
-   * Verifies if current focused file is ligo language.
-   * @param e The active editor for vscode instance.
-   * @returns `true` if active editor is a ligo file, `false` otherwise.
-   */
-  export function isLigoFileDetected(e: vscode.TextDocument): boolean {
-    if (!e) {
-      return false;
-    }
-    return !!e.languageId.match(/^(m|js|re)?ligo$/g);
-  }
-
-  /**
-   * Verifies if ligo-vscode is installed and active.
-   * @returns `true` if the above condition is true, `false` otherwise.
-   */
-  export function isLigoExtensionActive(): boolean {
-    const a = vscode.extensions.getExtension("ligolang-publish.ligo-vscode");
-    return !!a && a.isActive;
-  }
-
-  /**
-   * Creates and returns `ContractEntryScheme` object from params.
-   * @param ligoPath Path to a ligo document.
-   * @param michelsonPath Destination path for compilations of specified ligo document.
-   * @param entrypoint Entrypoint to michelson contract as string.
-   * @returns A `ContractEntryScheme` object.
-   */
-  export function createEntry(
-    ligoPath: string,
-    michelsonPath: string,
-    entrypoint: string
-  ): ContractEntryScheme {
-    return {
-      title: posix.basename(ligoPath).split(".")[0],
-      source: ligoPath,
-      onPath: michelsonPath,
-      entrypoint: entrypoint,
-      flags: [],
-    };
-  }
-
-  /**
-   * Compiles the active ligo document using a set of options.
-   * @param source File path to active ligo document.
-   * @param cco Set of compilation options for a ligo contract.
-   * @returns `CompileContractOutput` object.
-   */
-  export function compileLigo(
-    source: string,
-    cco: CompileContractOptions
-  ): CompileContractOutput {
-    let command = `ligo compile contract ${source} -e ${
-      cco.entrypoint
-    } ${cco.flags.join(" ")}`.trimEnd();
-
-    if (cco.onPath) {
-      command = command.concat(` -o ${cco.onPath}`);
-    }
-
-    try {
-      // Compile without outputting to file
-      const stdout = execSync(command, { encoding: "utf-8" });
-      return { command: command, stdout: stdout, status: true };
-    } catch (error) {
-      return { command: command, stdout: undefined, status: false };
-    }
-  }
-
-  /**
-   * Calls to `ligo.silentCompileContract` command with compile contract options.
-   * @param cco Set of compilation options for a ligo contract.
-   * @returns Set of contract compilation results as `ExecutionResult` or a promise to one.
-   */
-  export async function _compileLigo(
-    cco: CompileContractOptions
-  ): Promise<ExecutionResult> {
-    return await vscode.commands.executeCommand("ligo.silentCompileContract", {
-      ...cco,
-      printToConsole: false,
-    });
-  }
-
-  /**
-   * Preppend all lines of text with `"# "`.
-   * @param content Text as a string.
-   * @returns The same text with each line preppended with `"# "`.
-   */
-  function commentMichelson(content: string) {
-    const lines = content.split("\n");
-    let arr = lines.map((line) => {
-      return `# ${line}\n`;
-    });
-    return arr.join("\n");
-  }
-
-  /**
-   * Extract and parse data from ligo compilation process.
-   * @param results Object pertaining information regarding ligo compilation.
-   * @returns Data parsed from compilation results.
-   */
-  export function extractResults(results: ExecutionResult) {
-    // ? Is there any terser way to do this?
-    switch (results.t) {
-      case "Success":
-        return { ok: true, text: results.result };
-      case "LigoExecutionException":
-        return { ok: true, text: commentMichelson(results.error) };
-      default:
-        return { ok: false, text: results.t };
-    }
-  }
-
+export namespace io {
   /**
    * Evaluate `vscode.Uri` to an existing resource.
    * @param uri Uri subject to existence check.
@@ -166,9 +31,9 @@ export namespace utils {
    */
   export async function safeRead(uri: vscode.Uri): Promise<string> {
     try {
-      let encoded = await vscode.workspace.fs.readFile(uri);
-      let decoded = new TextDecoder("utf-8").decode(encoded);
-      return decoded;
+      return new TextDecoder("utf-8").decode(
+        await vscode.workspace.fs.readFile(uri)
+      );
     } catch {
       return "";
     }
@@ -238,6 +103,64 @@ export namespace utils {
       return undefined;
     }
   }
+}
+
+export namespace verifiers {
+  /**
+   * Verifies if ligo executable is found within the sytem.
+   * @returns `true` if ligo executable is found, `false` otherwise.
+   */
+  export function ligoBinaries(): boolean {
+    try {
+      execSync("which ligo", { encoding: "utf-8" });
+      return true;
+    } catch (error) {
+      return false;
+    }
+  }
+
+  /**
+   * Verifies if Whylson program is found within the sytem.
+   * @returns `true` if Whylson is found, `false` otherwise.
+   */
+  export function whylsonBinaries(): boolean {
+    throw new Error("Method not implemented.");
+  }
+
+  /**
+   * Verifies if current focused file is ligo language.
+   * @param e The active editor for vscode instance.
+   * @returns `true` if active editor is a ligo file, `false` otherwise.
+   */
+  export function isLigoFile(e: vscode.TextDocument): boolean {
+    if (!e) {
+      return false;
+    }
+    return !!e.languageId.match(/^(m|js|re)?ligo$/g);
+  }
+}
+
+export namespace utils {
+  /**
+   * Creates and returns `ContractEntryScheme` object from params.
+   * @param ligoPath Path to a ligo document.
+   * @param michelsonPath Destination path for compilations of specified ligo document.
+   * @param entrypoint Entrypoint to michelson contract as string.
+   * @returns A `ContractEntryScheme` object.
+   */
+  export function createEntry(
+    ligoPath: string,
+    michelsonPath: string,
+    entrypoint: string
+  ): ContractEntryScheme {
+    return {
+      title: posix.basename(ligoPath).split(".")[0],
+      source: ligoPath,
+      onPath: michelsonPath,
+      entrypoint: entrypoint,
+      flags: [],
+    };
+  }
 
   /**
    * Creates a quickpick with `showInputBox`.
@@ -257,5 +180,46 @@ export namespace utils {
           : "Values must conform to ligo's function nomenclature";
       },
     });
+  }
+
+  /**
+   * Preppend all lines of text with `"# "`.
+   * @param content Text as a string.
+   * @returns The same text with each line preppended with `"# "`.
+   */
+  function commentMichelson(content: string): string {
+    const lines = content.split("\n");
+    let result = "";
+    lines.forEach((line) => {
+      result += `# ${line}\n`;
+    });
+    return result;
+  }
+
+  /**
+   * Compilation with execFileSync function.
+   * @param source File path to active ligo document.
+   * @param cco Set of compilation options for a ligo contract.
+   * @returns Michelson code or exception caught as string.
+   */
+  export function compileLigo(
+    source: string,
+    cco: CompileContractOptions
+  ): CompilationResult {
+    let command = `ligo compile contract ${source} -e ${cco.entrypoint} ${
+      cco.onPath ? `-o ${cco.onPath}` : ""
+    } ${cco.flags.join(" ")}`.trimEnd();
+
+    try {
+      return {
+        ok: true,
+        disp: true,
+        content: execSync(command, { encoding: "utf8" }),
+      };
+    } catch (error) {
+      return error instanceof Error
+        ? { ok: false, disp: true, content: commentMichelson(error.message) }
+        : { ok: false, disp: false, content: "" };
+    }
   }
 }

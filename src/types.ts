@@ -23,34 +23,6 @@ export interface CompileContractOptions {
 }
 
 /**
- * The object resulting out of ligo document compilation.
- */
-export interface CompileContractOutput {
-  /**
-   * Given command for compilation,
-   */
-  command?: string;
-  /**
-   * If output was not redirected to file, outputs contents to stdout.
-   * If output was redirected, contents are empty string.
-   */
-  stdout: Maybe<string>;
-  /**
-   * Compile operation result.
-   */
-  status: boolean;
-}
-
-/**
- * Object type returned after compile ligo command from ligo-vscode extension.
- */
-export type ExecutionResult =
-  | { t: "Success"; result: string }
-  | { t: "NoLigoPath" }
-  | { t: "UnknownCommandType" }
-  | { t: "LigoExecutionException"; error: string };
-
-/**
  * Type of entries present in `contracts.json`.
  */
 export interface ContractEntryScheme extends CompileContractOptions {
@@ -68,3 +40,23 @@ export interface ContractEntryScheme extends CompileContractOptions {
    */
   onPath: string;
 }
+
+/**
+ * Holds information regarding a call to ligo compile contract.
+ */
+export type CompilationResult = {
+  /**
+   * A successful Ligo compiltion is portrayed as true.
+   */
+  ok: boolean;
+
+  /**
+   * If it is possible to display contents from compilation.
+   */
+  disp: boolean;
+
+  /**
+   * Output from either standard output/error resulted from compilation.
+   */
+  content: string;
+};
